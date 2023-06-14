@@ -34,13 +34,9 @@ public class PasswordHashingService
             Iterations = _options.Iterations,
             Salt = passwordSalt
         };
-        {
-            byte[] passwordHash = argon2.GetBytes(_options.HashLengthInBytes);
-
-            var passwordHashAndSalt = $"{Convert.ToBase64String(passwordHash)}:{Convert.ToBase64String(passwordSalt)}";
-
-            return passwordHashAndSalt;
-        }
+        byte[] passwordHash = argon2.GetBytes(_options.HashLengthInBytes);
+        var passwordHashAndSalt = $"{Convert.ToBase64String(passwordHash)}:{Convert.ToBase64String(passwordSalt)}";
+        return passwordHashAndSalt;
     }
 
     public string GetPasswordHash(string password, byte[] passwordSalt)
