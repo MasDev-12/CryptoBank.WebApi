@@ -19,7 +19,6 @@ public static class RegisterUser
     {
         public RequestValidator(ApplicationDbContext applicationDbContext)
         {
-
             RuleFor(x => x.Email)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
@@ -66,24 +65,22 @@ public static class RegisterUser
             , IOptions<PasswordHashingOptions> passwordHashOptions)
         {
             _applicationDbContext = applicationDbContext;
-            _passwordHeshingService=passwordHeshingService;
-            _usersOptions=usersOptions.Value;
-            _passwordHashOptions=passwordHashOptions.Value;
+            _passwordHeshingService = passwordHeshingService;
+            _usersOptions = usersOptions.Value;
+            _passwordHashOptions = passwordHashOptions.Value;
         }
 
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             UserRole userRole = UserRole.UserRole;
-            var passwordSalt = _passwordHeshingService.GenerateSalt();
-            var passwordHash = _passwordHeshingService.GetPasswordHash(request.Password, Convert.FromBase64String(passwordSalt));
-            var passwordHashAndSalt = $"{passwordHash}:{passwordSalt}";
-            if (request.Email.Equals(_usersOptions.AdministratorEmail))
+            var passwordHashAndSalt = _passwordHeshingService.GetPasswordHash(request.Password);
+            if (request.Email.Equals(_usersOptions.AdministratorEmail.ToLower()))
             {
                 userRole = UserRole.AdministratorRole;
             }
             var user = new User()
             {
-                Email = request.Email,
+                Email = request.Email.ToLower(),
                 PasswordHashAndSalt = passwordHashAndSalt,
                 Parallelism = _passwordHashOptions.Parallelism,
                 Iterations = _passwordHashOptions.Iterations,

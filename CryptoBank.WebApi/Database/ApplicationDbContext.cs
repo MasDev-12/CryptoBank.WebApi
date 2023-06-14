@@ -7,14 +7,16 @@ public class ApplicationDbContext:DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<User> Users { get; set; }
-    public DbSet<Role> Roles { get; set; }
+  
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         MapUsers(modelBuilder);
         MapRoles(modelBuilder);
     }
+
+    public DbSet<User> Users { get; set; }
+    public DbSet<Role> Roles { get; set; }
 
     private void MapUsers(ModelBuilder modelBuilder)
     {
@@ -32,10 +34,10 @@ public class ApplicationDbContext:DbContext
                 .IsRequired();
 
             user.Property(x => x.Parallelism)
-              .IsRequired();
+                .IsRequired();
 
             user.Property(x => x.Iterations)
-          .IsRequired();
+                .IsRequired();
 
             user.Property(x => x.BirthDate)
                 .IsRequired();
@@ -54,18 +56,18 @@ public class ApplicationDbContext:DbContext
             role.HasKey(x => x.Id);
 
             role.Property(x => x.UserId)
-            .IsRequired();
+                .IsRequired();
 
             role.Property(x => x.Name)
-            .IsRequired();
+                .IsRequired();
 
             role.Property(x => x.CreatedAt)
-            .IsRequired();
+                .IsRequired();
 
             role.HasOne(r => r.User)
-            .WithMany(u => u.Roles)
-            .HasForeignKey(r => r.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(u => u.Roles)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -13,16 +13,34 @@ public class PasswordHashingService
 
     public PasswordHashingService(IOptions<PasswordHashingOptions> options)
     {
-        _options=options.Value;
+        _options = options.Value;
     }
 
-    public string GenerateSalt()
+    private byte[] GenerateSalt()
     {
-        byte[] salt = new byte[32];
+        byte[] salt = new byte[_options.HashLengthInBytes];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(salt);
+        return salt;
+    }
 
-        return Convert.ToBase64String(salt);
+    public string GetPasswordHash(string password)
+    {
+        byte[] passwordSalt = GenerateSalt();
+        using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
+        {
+            DegreeOfParallelism = _options.Parallelism,
+            MemorySize = _options.MemorySize,
+            Iterations = _options.Iterations,
+            Salt = passwordSalt
+        };
+        {
+            byte[] passwordHash = argon2.GetBytes(_options.HashLengthInBytes);
+
+            var passwordHashAndSalt = $"{Convert.ToBase64String(passwordHash)}:{Convert.ToBase64String(passwordSalt)}";
+
+            return passwordHashAndSalt;
+        }
     }
 
     public string GetPasswordHash(string password, byte[] passwordSalt)
@@ -34,20 +52,7 @@ public class PasswordHashingService
             Iterations = _options.Iterations,
             Salt = passwordSalt
         };
-        {
-            byte[] passwordHash = argon2.GetBytes(32);
-            return (Convert.ToBase64String(passwordHash));
-        }
-    }
-
-    public bool CheckPasswordHasherOptions(User user)
-    {
-        if (user.MemorySize == _options.MemorySize
-            && user.Parallelism ==_options.Parallelism
-            && user.Iterations == _options.Iterations)
-        {
-            return true;
-        }
-        return false;
+        byte[] passwordHash = argon2.GetBytes(_options.HashLengthInBytes);
+        return Convert.ToBase64String(passwordHash);
     }
 }
