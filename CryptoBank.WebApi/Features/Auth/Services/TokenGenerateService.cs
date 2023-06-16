@@ -15,8 +15,8 @@ public class TokenGenerateService
 
     public TokenGenerateService(ApplicationDbContext applicationDbContext, IOptions<AuthOptions> authOptions)
     {
-        _applicationDbContext=applicationDbContext;
-        _authOptions=authOptions.Value;
+        _applicationDbContext = applicationDbContext;
+        _authOptions = authOptions.Value;
     }
 
     public async Task<string> GenerateAccessToken(User user,CancellationToken cancellationToken)
