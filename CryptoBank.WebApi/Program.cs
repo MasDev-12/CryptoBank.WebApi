@@ -1,21 +1,33 @@
 using CryptoBank.WebApi.Database;
+using CryptoBank.WebApi.Features.Users.Registration;
+using CryptoBank.WebApi.Pipeline;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ApplicationDbContext")));
 
-// Add services to the container.
+builder.Services.AddMediatR(cfg => cfg
+    .RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
+    .AddOpenBehavior(typeof(ValidationBehavior<,>)));
+
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 builder.Services.AddControllers();
 
+
+builder.AddUsers();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
