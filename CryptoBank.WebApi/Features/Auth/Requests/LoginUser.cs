@@ -48,6 +48,7 @@ public class LoginUser
             _passwordHeshingService = passwordHeshingService;
             _passwordHasherOptions = passwordHasherOptions.Value;
         }
+
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             var user = await _applicationDbContext.Users
@@ -58,9 +59,16 @@ public class LoginUser
                 throw new Exception("Invalid credentials");
             }
 
+            string[] parts = user.PasswordHashAndSalt.Split(':');
+            var passwordHash = _passwordHeshingService.GetPasswordHash(request.Password, Convert.FromBase64String(parts[1]), user);
+            if (passwordHash!=parts[0])
+            {
+                throw new Exception("Invalid credentials");
+            }
+
             if (!(user.MemorySize == _passwordHasherOptions.MemorySize
-            && user.Parallelism ==_passwordHasherOptions.Parallelism
-            && user.Iterations == _passwordHasherOptions.Iterations))
+               && user.Parallelism ==_passwordHasherOptions.Parallelism
+               && user.Iterations == _passwordHasherOptions.Iterations))
             {
                 var updatePasswordHashAndSalt = _passwordHeshingService.GetPasswordHash(request.Password);
                 user.PasswordHashAndSalt = updatePasswordHashAndSalt;
@@ -70,14 +78,6 @@ public class LoginUser
                 user.MemorySize = _passwordHasherOptions.MemorySize;
                 _applicationDbContext.Users.Update(user);
                 await _applicationDbContext.SaveChangesAsync(cancellationToken); ;
-            }
-            string[] parts = user.PasswordHashAndSalt.Split(':');
-            string passwordSalt = parts[1];
-            var passwordHash = _passwordHeshingService.GetPasswordHash(request.Password, Convert.FromBase64String(passwordSalt));
-            var passwordHashAndSalt = $"{passwordHash}:{passwordSalt}";
-            if (passwordHashAndSalt != user.PasswordHashAndSalt)
-            {
-                throw new Exception("Invalid credentials");
             }
 
             var accessToken = await _tokenGenerateService.GenerateAccessToken(user, cancellationToken);
