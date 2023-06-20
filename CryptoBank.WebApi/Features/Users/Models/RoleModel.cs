@@ -4,6 +4,6 @@ namespace CryptoBank.WebApi.Features.Users.Models;
 
 public class RoleModel
 {
-    public long Id { get; set; }
-    public UserRole Name { get; set; }
+    public string RoleName { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
