@@ -37,7 +37,7 @@ public class GetUserInfo
         }
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
-            var user = await _applicationDbContext.Users.Include(u => u.Roles).FirstAsync(u => u.Id == request.UserId, cancellationToken);
+            var user = await _applicationDbContext.Users.Include(u => u.Roles).SingleAsync(u => u.Id == request.UserId, cancellationToken);
             return new Response(new UserModel()
             {
                 Id = user.Id,

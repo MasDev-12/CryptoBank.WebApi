@@ -24,14 +24,16 @@ public class UserController: Controller
     }
 
     [Authorize]
-    [HttpGet("get-user-info")]
+    [HttpGet("get-info")]
     public async Task<GetUserInfo.Response> GetUserInfo(CancellationToken cancellationToken)
     {
         var user = HttpContext?.User;
-        long userId = Convert.ToInt64(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value);
-
-        var request = new GetUserInfo.Request(userId);
-        var response = await _mediator.Send(request, cancellationToken);
-        return response;
+        if (long.TryParse(user.Claims.SingleOrDefault(i => i.Type == ClaimTypes.NameIdentifier)?.Value, out var userId))
+        {
+            var request = new GetUserInfo.Request(userId);
+            var response = await _mediator.Send(request, cancellationToken);
+            return response;
+        }
+        throw new Exception();
     }
 }
