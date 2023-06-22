@@ -1,6 +1,8 @@
+using CryptoBank.WebApi.Authorization.Requirements;
 using CryptoBank.WebApi.Database;
 using CryptoBank.WebApi.Features.Auth.Options;
 using CryptoBank.WebApi.Features.Auth.Registration;
+using CryptoBank.WebApi.Features.Users.Domain;
 using CryptoBank.WebApi.Features.Users.Registration;
 using CryptoBank.WebApi.Pipeline;
 using FluentValidation;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +39,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwtOptions.SigningKey)),
         };
     });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(PolicyNames.UserRole, policy => policy.RequireClaim(ClaimTypes.Role, UserRole.UserRole.ToString()));
+    options.AddPolicy(PolicyNames.AnalystRole, policy => policy.RequireClaim(ClaimTypes.Role, UserRole.AnalystRole.ToString()));
+    options.AddPolicy(PolicyNames.AdministratorRole, policy => policy.RequireClaim(ClaimTypes.Role, UserRole.AdministratorRole.ToString()));
+});
 
 builder.Services.AddControllers();
 
