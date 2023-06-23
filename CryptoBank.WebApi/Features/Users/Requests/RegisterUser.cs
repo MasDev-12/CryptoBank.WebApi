@@ -74,7 +74,7 @@ public static class RegisterUser
         {
             UserRole userRole = UserRole.UserRole;
             var passwordHashAndSalt = _passwordHeshingService.GetPasswordHash(request.Password);
-            if (request.Email.Equals(_usersOptions.AdministratorEmail.ToLower()))
+            if (request.Email.ToLower().Equals(_usersOptions.AdministratorEmail.ToLower()))
             {
                 userRole = UserRole.AdministratorRole;
             }
