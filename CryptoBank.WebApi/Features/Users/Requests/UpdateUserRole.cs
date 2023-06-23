@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CryptoBank.WebApi.Features.Users.Requests;
 
-public class UpdateUserRole
+public static class UpdateUserRole
 {
-    public record Request(string Email, string UpdateRole) : IRequest<Response>;
+    public record Request(string Email, UserRole UpdateRole) : IRequest<Response>;
 
     public record Response(UserModel UserModel);
 
@@ -28,27 +28,15 @@ public class UpdateUserRole
               .Cascade(CascadeMode.Stop)
               .MustAsync(async (x, token) =>
               {
-                  var userExists = await applicationDbContext.Users.AnyAsync(user => user.Email == x, token);
+                  var userExists = await applicationDbContext.Users.AnyAsync(user => user.Email == x.ToLower(), token);
 
                   return userExists;
               }).WithMessage("User not exist");
 
             RuleFor(x => x.UpdateRole)
-                .Cascade(CascadeMode.Stop)
-                .MustAsync(async (role, cancellationToken) => await IsValidRole(role, cancellationToken))
-                .WithMessage("Invalid role name, role not found");
-        }
-
-        private async Task<bool> IsValidRole(string role, CancellationToken cancellationToken)
-        {
-            foreach (var item in Enum.GetValues(typeof(UserRole)))
-            {
-                if (Enum.GetName(typeof(UserRole), item) == role)
-                {
-                    return true;
-                }
-            }
-            return false;
+             .Cascade(CascadeMode.Stop)
+             .IsInEnum()
+             .WithMessage("Invalid role name, role not found");
         }
     }
 
@@ -63,12 +51,11 @@ public class UpdateUserRole
 
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
-            UserRole updateuserRole = (UserRole)Enum.Parse(typeof(UserRole), request.UpdateRole);
             var user = await _applicationDbContext.Users
                 .Include(u => u.Roles)
                 .SingleOrDefaultAsync(u => u.Email == request.Email.ToLower(), cancellationToken);
 
-            var role = user.Roles.SingleOrDefault(r => r.Name == updateuserRole);
+            var role = user.Roles.SingleOrDefault(r => r.Name == request.UpdateRole);
 
             if (role != null)
             {
@@ -78,7 +65,7 @@ public class UpdateUserRole
             var newRole = new Role
             {
                 UserId = user.Id,
-                Name = updateuserRole,
+                Name = request.UpdateRole,
                 CreatedAt = DateTime.Now.ToUniversalTime()
             };
 

@@ -39,8 +39,8 @@ public class UserController: Controller
     }
 
     [Authorize(Policy = PolicyNames.AdministratorRole)]
-    [HttpPost("update-role")]
-    public async Task<UpdateUserRole.Response> UpdateUserRole(UpdateUserRole.Request request, CancellationToken cancellationToken)
+    [HttpPut("update-role")]
+    public async Task<UpdateUserRole.Response> UpdateUserRole([FromBody] UpdateUserRole.Request request, CancellationToken cancellationToken)
     {
         var response = await _mediator.Send(request, cancellationToken);
         return response;

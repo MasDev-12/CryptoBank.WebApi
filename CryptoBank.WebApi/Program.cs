@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +48,12 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(PolicyNames.AdministratorRole, policy => policy.RequireClaim(ClaimTypes.Role, UserRole.AdministratorRole.ToString()));
 });
 
-builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.SuppressModelStateInvalidFilter = true;
+    });
 
 
 builder.AddUsers();
