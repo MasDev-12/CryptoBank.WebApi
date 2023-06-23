@@ -1,4 +1,5 @@
-﻿using CryptoBank.WebApi.Features.Users.Domain;
+﻿using CryptoBank.WebApi.Features.Accounts.Domain;
+using CryptoBank.WebApi.Features.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace CryptoBank.WebApi.Database;
@@ -12,10 +13,12 @@ public class ApplicationDbContext:DbContext
         base.OnModelCreating(modelBuilder);
         MapUsers(modelBuilder);
         MapRoles(modelBuilder);
+        MapAccounts(modelBuilder);
     }
 
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
+    public DbSet<Account> Accounts { get; set; }
 
     private void MapUsers(ModelBuilder modelBuilder)
     {
@@ -66,6 +69,34 @@ public class ApplicationDbContext:DbContext
             role.HasOne(r => r.User)
                 .WithMany(u => u.Roles)
                 .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void MapAccounts(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Account>(account =>
+        {
+            account.HasKey(a => a.Id);
+
+            account.Property(a => a.Number)
+                 .IsRequired();
+
+            account.Property(a => a.Currency)
+                 .IsRequired();
+
+            account.Property(a => a.Amount)
+                .IsRequired();
+
+            account.Property(a => a.CreatedAt)
+                .IsRequired();
+
+            account.Property(a => a.UserId)
+                .IsRequired();
+
+            account.HasOne(a => a.User)
+                .WithMany(a => a.Accounts)
+                .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

@@ -1,10 +1,13 @@
-﻿namespace CryptoBank.WebApi.Features.Users.Domain;
+﻿using CryptoBank.WebApi.Features.Accounts.Domain;
+
+namespace CryptoBank.WebApi.Features.Users.Domain;
 
 public class User
 {
     public User()
     {
         Roles = new HashSet<Role>();
+        Accounts = new HashSet<Account>();
     }
     public long Id { get; set; }
     public string Email { get; set; }
@@ -17,4 +20,5 @@ public class User
     public DateTime? UpdatedAt { get; set; }
 
     public ICollection<Role> Roles { get; set; }
+    public ICollection<Account> Accounts { get; set; }
 }
