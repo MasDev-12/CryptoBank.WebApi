@@ -1,4 +1,6 @@
 ﻿using CryptoBank.WebApi.Authorization.Requirements;
+using CryptoBank.WebApi.Features.Accounts.Helpers;
+using CryptoBank.WebApi.Features.Users.Domain;
 using CryptoBank.WebApi.Features.Users.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -16,34 +18,26 @@ public class AccountController : Controller
     public AccountController(IMediator mediator) => _mediator = mediator;
 
     [Authorize]
-    [HttpPost("create")]
+    [HttpPost]
     public async Task<CreateAccount.Response> CreateAccount(CreateAccount.Request request, CancellationToken cancellationToken)
     {
-        var user = HttpContext?.User;
-        if (long.TryParse(user.Claims.SingleOrDefault(i => i.Type == ClaimTypes.NameIdentifier)?.Value, out var userId))
-        {
-            var response = await _mediator.Send(new CreateAccount.Request(request.Number, request.Currency, userId), cancellationToken);
-            return response;
-        }
-        throw new Exception();
+        var userId = GetUserIdFromClaims.GetUserId(HttpContext!.User);
+        var response = await _mediator.Send(new CreateAccount.Request(request.Number, request.Currency, userId), cancellationToken);
+        return response;
     }
 
     [Authorize]
-    [HttpGet("get-info")]
+    [HttpGet("own")]
     public async Task<GetOwnAccounts.Response> GetOwnAccounts(CancellationToken cancellationToken)
     {
-        var user = HttpContext?.User;
-        if (long.TryParse(user.Claims.SingleOrDefault(i => i.Type == ClaimTypes.NameIdentifier)?.Value, out var userId))
-        {
-            var response = await _mediator.Send(new GetOwnAccounts.Request(userId), cancellationToken);
-            return response;
-        }
-        throw new Exception();
+        var userId = GetUserIdFromClaims.GetUserId(HttpContext!.User);
+        var response = await _mediator.Send(new GetOwnAccounts.Request(userId), cancellationToken);
+        return response;
     }
 
     [Authorize(Policy = PolicyNames.AnalystRole)]
     [HttpGet("get-info-by-period")]
-    public async Task<GetAccountsByPeriod.Response> GetAccountsByPeriod([FromBody] GetAccountsByPeriod.Request request, CancellationToken cancellationToken)
+    public async Task<GetAccountsByPeriod.Response> GetAccountsByPeriod([FromQuery] GetAccountsByPeriod.Request request, CancellationToken cancellationToken)
     {
         var response = await _mediator.Send(request, cancellationToken);
         return response;

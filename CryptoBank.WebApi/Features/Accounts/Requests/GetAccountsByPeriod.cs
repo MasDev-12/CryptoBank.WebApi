@@ -13,7 +13,7 @@ public static class GetAccountsByPeriod
 
     public class RequestValidator : AbstractValidator<Request>
     {
-        public RequestValidator(ApplicationDbContext applicationDbContext)
+        public RequestValidator()
         {
             RuleFor(x => x.Start)
                 .Cascade(CascadeMode.Stop)
@@ -27,13 +27,13 @@ public static class GetAccountsByPeriod
 
             RuleFor(x => new { x.Start, x.End })
                 .Cascade(CascadeMode.Stop)
-                .MustAsync(async (pair, cancellationToken) => await IsValidRange(pair.Start, pair.End, cancellationToken))
+                .Must((pair, cancellationToken) => IsValidRange(pair.Start, pair.End))
                 .WithMessage("Invalid Range");
         }
 
-        private async Task<bool> IsValidRange(DateOnly start, DateOnly end, CancellationToken cancellationToken)
+        private static bool IsValidRange(DateOnly start, DateOnly end)
         {
-            return start<end;
+            return start < end;
         }
     }
 
@@ -43,7 +43,7 @@ public static class GetAccountsByPeriod
 
         public RequestHandler(ApplicationDbContext applicationDbContext)
         {
-            _applicationDbContext=applicationDbContext;
+            _applicationDbContext = applicationDbContext;
         }
 
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)

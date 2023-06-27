@@ -42,17 +42,18 @@ public static class GetOwnAccounts
 
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
-            var accounts = await _applicationDbContext.Accounts.Where(x => x.UserId == request.UserId).ToListAsync(cancellationToken);
-            List<AccountModel> accountModels = accounts?.Select(account => new AccountModel()
-            {
-                Id = account.Id,
-                Number = account.Number,
-                UserId = account.UserId,
-                Amount = account.Amount,
-                Currency = account.Currency,
-                CreatedAt = account.CreatedAt
-            }).ToList() ?? new List<AccountModel>();
-            return new Response(accountModels);
+            var accounts = await _applicationDbContext.Accounts
+                .Select(account => new AccountModel()
+                {
+                    Id = account.Id,
+                    Number = account.Number,
+                    UserId = account.UserId,
+                    Amount = account.Amount,
+                    Currency = account.Currency,
+                    CreatedAt = account.CreatedAt
+                }).ToListAsync();
+
+            return new Response(accounts);
         }
     }
 }
