@@ -1,11 +1,9 @@
 ﻿using CryptoBank.WebApi.Authorization.Requirements;
-using CryptoBank.WebApi.Features.Accounts.Helpers;
-using CryptoBank.WebApi.Features.Users.Domain;
-using CryptoBank.WebApi.Features.Users.Requests;
+using CryptoBank.WebApi.Features.Accounts.Models;
+using CryptoBank.WebApi.Helpers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CryptoBank.WebApi.Features.Accounts.Requests.Contollers;
 
@@ -19,10 +17,10 @@ public class AccountController : Controller
 
     [Authorize]
     [HttpPost]
-    public async Task<CreateAccount.Response> CreateAccount(CreateAccount.Request request, CancellationToken cancellationToken)
+    public async Task<CreateAccount.Response> CreateAccount(CreateAccountModel createAccountModel, CancellationToken cancellationToken)
     {
         var userId = GetUserIdFromClaims.GetUserId(HttpContext!.User);
-        var response = await _mediator.Send(new CreateAccount.Request(request.Number, request.Currency, userId), cancellationToken);
+        var response = await _mediator.Send(new CreateAccount.Request(createAccountModel.Number, createAccountModel.Currency, userId), cancellationToken);
         return response;
     }
 

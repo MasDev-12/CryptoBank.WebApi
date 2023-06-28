@@ -1,10 +1,8 @@
 ﻿using CryptoBank.WebApi.Authorization.Requirements;
-using CryptoBank.WebApi.Features.Accounts.Helpers;
-using CryptoBank.WebApi.Features.Users.Domain;
+using CryptoBank.WebApi.Helpers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CryptoBank.WebApi.Features.Users.Requests.Controllers;
 
@@ -31,17 +29,9 @@ public class UserController: Controller
     public async Task<GetUserInfo.Response> GetUserInfo(CancellationToken cancellationToken)
     {
         var user = HttpContext?.User;
-        try
-        {
-            var userId = GetUserIdFromClaims.GetUserId(user);
-            var request = new GetUserInfo.Request(userId);
-            var response = await _mediator.Send(request, cancellationToken);
-            return response;
-        }
-        catch (Exception)
-        {
-            throw new Exception();
-        }
+        var userId = GetUserIdFromClaims.GetUserId(user);
+        var response = await _mediator.Send(new GetUserInfo.Request(userId), cancellationToken);
+        return response;
     }
 
     [Authorize(Policy = PolicyNames.AdministratorRole)]

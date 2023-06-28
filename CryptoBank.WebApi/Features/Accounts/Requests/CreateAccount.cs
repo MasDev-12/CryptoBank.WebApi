@@ -18,7 +18,7 @@ public static class CreateAccount
 
     public class RequestValidator : AbstractValidator<Request>
     {
-        public RequestValidator(ApplicationDbContext applicationDbContext, IOptions<AccountOptions> options)
+        public RequestValidator(ApplicationDbContext applicationDbContext)
         {
             RuleFor(x => x.Currency).Cascade(CascadeMode.Stop)
                 .NotEmpty()
@@ -36,34 +36,31 @@ public static class CreateAccount
             RuleFor(x => x.Number).Cascade(CascadeMode.Stop)
                 .MustAsync(async (x, token) =>
                 {
-                    var isAccountExist = await applicationDbContext.Accounts.AnyAsync(account => account.Number == x);
+                    var isAccountExist = await applicationDbContext.Accounts.AnyAsync(account => account.Number == x, token);
                     return !isAccountExist;
                 }).WithMessage("Account already exist");
-
-            RuleFor(x => x.UserId).Cascade(CascadeMode.Stop)
-                .MustAsync(async (x, token) =>
-                {
-                    var accountCount = await applicationDbContext.Accounts.Where(a => a.UserId == x).CountAsync(token);
-
-                    if (accountCount == options.Value.MaxAccountsPerUser)
-                    {
-                        return false;
-                    }
-                    return true;
-                }).WithMessage("The number of accounts exceeded");
         }
     }
 
     public class RequestHandler : IRequestHandler<Request, Response>
     {
         private readonly ApplicationDbContext _applicationDbContext;
+        private readonly AccountOptions _accountOptions;
 
-        public RequestHandler(ApplicationDbContext applicationDbContext, IOptions<AccountOptions> options)
+        public RequestHandler(ApplicationDbContext applicationDbContext, IOptions<AccountOptions> accountOptions)
         {
             _applicationDbContext = applicationDbContext;
+            _accountOptions = accountOptions.Value;
         }
+
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
+            var accountCount = await _applicationDbContext.Accounts.Where(a => a.UserId == request.UserId).CountAsync(cancellationToken);
+            if (accountCount == _accountOptions.MaxAccountsPerUser)
+            {
+                throw new Exception();
+            }
+
             var account = new Account()
             {
                 Number = request.Number,
