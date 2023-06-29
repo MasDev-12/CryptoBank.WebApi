@@ -1,5 +1,6 @@
 using CryptoBank.WebApi.Authorization.Requirements;
 using CryptoBank.WebApi.Database;
+using CryptoBank.WebApi.Features.Accounts.Registration;
 using CryptoBank.WebApi.Features.Auth.Options;
 using CryptoBank.WebApi.Features.Auth.Registration;
 using CryptoBank.WebApi.Features.Users.Domain;
@@ -58,6 +59,7 @@ builder.Services.AddControllers()
 
 builder.AddUsers();
 builder.AddAuth();
+builder.AddAccounts();
 
 var app = builder.Build();
 
