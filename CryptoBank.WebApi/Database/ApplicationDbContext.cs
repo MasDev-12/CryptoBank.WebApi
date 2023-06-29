@@ -1,4 +1,5 @@
 ﻿using CryptoBank.WebApi.Features.Accounts.Domain;
+using CryptoBank.WebApi.Features.Auth.Domain;
 using CryptoBank.WebApi.Features.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,11 +15,13 @@ public class ApplicationDbContext:DbContext
         MapUsers(modelBuilder);
         MapRoles(modelBuilder);
         MapAccounts(modelBuilder);
+        MapRefreshTokens(modelBuilder);
     }
 
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Account> Accounts { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     private void MapUsers(ModelBuilder modelBuilder)
     {
@@ -98,6 +101,26 @@ public class ApplicationDbContext:DbContext
                 .WithMany(a => a.Accounts)
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    public void MapRefreshTokens(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RefreshToken>(refreshToken =>
+        {
+            refreshToken.HasKey(r => r.Id);
+
+            refreshToken.Property(e => e.Token)
+          .IsRequired()
+          .HasMaxLength(1000);
+
+            refreshToken.Property(r => r.userId)
+            .IsRequired();
+
+            refreshToken.HasOne(d => d.User)
+            .WithMany(p => p.RefreshTokens)
+            .HasForeignKey(d => d.userId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
         });
     }
 }
