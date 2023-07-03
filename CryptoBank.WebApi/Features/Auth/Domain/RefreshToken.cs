@@ -6,10 +6,11 @@ public class RefreshToken
 {
     public long Id { get; set; }
     public string Token { get; set; }
-    public long userId { get; set; }
+    public long UserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime ExpiryDate { get; set; }
-    public bool Revoke { get; set; }
+    public DateTime TokenExpirePeriod { get; set; }
+    public bool Revoked { get; set; }
     public long ReplacedByNextToken { get; set; }
 
     public User User { get; set; }

@@ -3,5 +3,6 @@
 public class RefreshTokenOptions
 {
     public TimeSpan RefreshTokenExpiration { get; set; }
-    public int HashLengthInBytes { get; set; }
+    public TimeSpan RefreshTokenExpirationPeriod { get; set; }
+    public int LengthBytes { get; set; }
 }

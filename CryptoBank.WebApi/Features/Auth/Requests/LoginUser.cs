@@ -98,8 +98,8 @@ public class LoginUser
                 await _applicationDbContext.SaveChangesAsync(cancellationToken); ;
             }
 
-            var (AccessToken, RefreshToken) = await _tokenGenerateService.GenerateTokens(user, cancellationToken);
-            return new Response(AccessToken, RefreshToken);
+            var (accessToken, refreshToken) = await _tokenGenerateService.GenerateTokens(user, cancellationToken);
+            return new Response(accessToken, refreshToken);
         }
     }
 }

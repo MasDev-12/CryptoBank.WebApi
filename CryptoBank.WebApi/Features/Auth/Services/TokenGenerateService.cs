@@ -32,7 +32,7 @@ public class TokenGenerateService
               .OrderByDescending(x => x.CreatedAt)
               .ToArray();
 
-        var accessToken = GenerateAccesToken(user);
+        var accessToken = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken();
         await using var transaction = await _applicationDbContext.Database.BeginTransactionAsync(cancellationToken);
         {
@@ -40,9 +40,10 @@ public class TokenGenerateService
             {
                 var newRefreshToken = new RefreshToken
                 {
-                    userId = user.Id,
+                    UserId = user.Id,
                     Token = refreshToken,
                     ExpiryDate = DateTime.Now.Add(_refreshTokenOptions.RefreshTokenExpiration).ToUniversalTime(),
+                    TokenExpirePeriod = DateTime.Now.Add(_refreshTokenOptions.RefreshTokenExpirationPeriod).ToUniversalTime(),
                     CreatedAt = DateTime.Now.ToUniversalTime(),
                 };
 
@@ -50,17 +51,15 @@ public class TokenGenerateService
                 _applicationDbContext.Add(newRefreshToken);
                 await _applicationDbContext.SaveChangesAsync(cancellationToken);
 
-                var NotRevokeRefreshToken = refreshTokens.FirstOrDefault(t => !t.Revoke);
-                if (NotRevokeRefreshToken != null)
+                var notRevokeRefreshToken = refreshTokens.FirstOrDefault(t => !t.Revoked);
+                if (notRevokeRefreshToken != null)
                 {
-                    NotRevokeRefreshToken.Revoke = true;
-                    NotRevokeRefreshToken.ReplacedByNextToken = newRefreshToken.Id;
+                    notRevokeRefreshToken.Revoked = true;
+                    notRevokeRefreshToken.ReplacedByNextToken = newRefreshToken.Id;
                 }
-
-                var overdueTokens = refreshTokens.Where(x => x.ExpiryDate<=DateTime.Now.ToUniversalTime()).ToArray();
+                var overdueTokens = refreshTokens.Where(x => x.TokenExpirePeriod <= DateTime.Now.ToUniversalTime()).ToArray();
 
                 _applicationDbContext.RefreshTokens.RemoveRange(overdueTokens);
-
                 await _applicationDbContext.SaveChangesAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -68,12 +67,13 @@ public class TokenGenerateService
             catch (Exception)
             {
                 await transaction.RollbackAsync(cancellationToken);
+                throw new Exception();
             }
             return (accessToken, refreshToken);
         }
     }
 
-    private string GenerateAccesToken(User user)
+    private string GenerateAccessToken(User user)
     {
         var claims = new List<Claim>
             {
@@ -103,6 +103,6 @@ public class TokenGenerateService
 
     private string GenerateRefreshToken()
     {
-        return Convert.ToBase64String(RandomNumberGenerator.GetBytes(_refreshTokenOptions.HashLengthInBytes));
+        return Convert.ToBase64String(RandomNumberGenerator.GetBytes(_refreshTokenOptions.LengthBytes));
     }
 }

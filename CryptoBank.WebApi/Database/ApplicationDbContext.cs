@@ -111,16 +111,19 @@ public class ApplicationDbContext:DbContext
             refreshToken.HasKey(r => r.Id);
 
             refreshToken.Property(e => e.Token)
-          .IsRequired()
-          .HasMaxLength(1000);
+                 .IsRequired()
+                 .HasMaxLength(1000);
 
-            refreshToken.Property(r => r.userId)
-            .IsRequired();
+            refreshToken.HasIndex(r => r.Token)
+                 .IsUnique();
+
+            refreshToken.Property(r => r.UserId)
+                 .IsRequired();
 
             refreshToken.HasOne(d => d.User)
-            .WithMany(p => p.RefreshTokens)
-            .HasForeignKey(d => d.userId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
+                 .WithMany(p => p.RefreshTokens)
+                 .HasForeignKey(d => d.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

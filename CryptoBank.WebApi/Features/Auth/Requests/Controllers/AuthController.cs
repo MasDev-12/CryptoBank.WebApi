@@ -12,6 +12,7 @@ public class AuthController: Controller
     private readonly IMediator _mediator;
     private readonly RefreshTokenOptions _options;
     private const string RefreshTokenPath = "/auth/get-new-tokens";
+    private const string RefreshTokenForCookies = "refreshToken";
 
     public AuthController(IMediator mediator, IOptions<RefreshTokenOptions> options)
     {
@@ -31,7 +32,7 @@ public class AuthController: Controller
     [HttpGet("get-new-tokens")]
     public async Task<GetNewTokens.Response> GetNewTokens(CancellationToken cancellationToken)
     {
-        var refreshToken = Request.Cookies["refreshToken"];
+        var refreshToken = Request.Cookies[RefreshTokenForCookies];
 
         var request = new GetNewTokens.Request(refreshToken);
         var response = await _mediator.Send(request, cancellationToken);
@@ -42,7 +43,7 @@ public class AuthController: Controller
 
     private void AddToCookieRefreshToken(string refreshToken) 
     {
-        HttpContext.Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+        HttpContext.Response.Cookies.Append(RefreshTokenForCookies, refreshToken, new CookieOptions
         {
             HttpOnly = true,
             Secure = true,

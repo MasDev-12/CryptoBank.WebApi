@@ -49,15 +49,15 @@ public static class GetNewTokens
                 .Include(t => t.User)
                 .SingleOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken);
 
-            if (refreshToken.Revoke || refreshToken.ExpiryDate <= DateTime.Now.ToUniversalTime())
+            if (refreshToken.Revoked || refreshToken.ExpiryDate <= DateTime.Now.ToUniversalTime())
             {
                 var actualRefreshToken = await _applicationDbContext.RefreshTokens
-                    .Where(t => t.userId == refreshToken.userId && !t.Revoke)
-                    .FirstOrDefaultAsync(cancellationToken);
+                    .Where(t => t.UserId == refreshToken.UserId && !t.Revoked)
+                    .SingleOrDefaultAsync(cancellationToken);
 
                 if (actualRefreshToken != null)
                 {
-                    actualRefreshToken.Revoke = true;
+                    actualRefreshToken.Revoked = true;
                     await _applicationDbContext.SaveChangesAsync(cancellationToken);
                 }
                 throw new Exception();
