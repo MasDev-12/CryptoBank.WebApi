@@ -120,6 +120,21 @@ public class ApplicationDbContext:DbContext
             refreshToken.Property(r => r.UserId)
                  .IsRequired();
 
+            refreshToken.Property(r => r.CreatedAt)
+                .IsRequired();
+
+            refreshToken.Property(r => r.TokenValidityPeriod)
+                 .IsRequired();
+
+            refreshToken.Property(r => r.TokenStoragePeriod)
+                 .IsRequired();
+
+            refreshToken.Property(r => r.Revoked)
+                 .IsRequired();
+
+            refreshToken.Property(r => r.ReplacedByNextToken)
+                 .IsRequired(false);
+
             refreshToken.HasOne(d => d.User)
                  .WithMany(p => p.RefreshTokens)
                  .HasForeignKey(d => d.UserId)

@@ -48,7 +48,7 @@ public class AuthController: Controller
             HttpOnly = true,
             Secure = true,
             SameSite = SameSiteMode.None,
-            Expires = DateTime.UtcNow.Add(_options.RefreshTokenExpiration),
+            Expires = DateTime.UtcNow.Add(_options.ValidityPeriod),
             Path = RefreshTokenPath
         });
     }

@@ -49,7 +49,7 @@ public static class GetNewTokens
                 .Include(t => t.User)
                 .SingleOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken);
 
-            if (refreshToken.Revoked || refreshToken.ExpiryDate <= DateTime.Now.ToUniversalTime())
+            if (refreshToken.Revoked || refreshToken.TokenValidityPeriod <= DateTime.Now.ToUniversalTime())
             {
                 var actualRefreshToken = await _applicationDbContext.RefreshTokens
                     .Where(t => t.UserId == refreshToken.UserId && !t.Revoked)

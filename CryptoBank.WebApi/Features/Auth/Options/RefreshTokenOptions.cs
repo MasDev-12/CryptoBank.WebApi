@@ -2,7 +2,7 @@
 
 public class RefreshTokenOptions
 {
-    public TimeSpan RefreshTokenExpiration { get; set; }
-    public TimeSpan RefreshTokenExpirationPeriod { get; set; }
+    public TimeSpan StoragePeriod { get; set; }
+    public TimeSpan ValidityPeriod { get; set; }
     public int LengthBytes { get; set; }
 }

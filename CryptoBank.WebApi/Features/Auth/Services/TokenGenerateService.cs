@@ -42,8 +42,8 @@ public class TokenGenerateService
                 {
                     UserId = user.Id,
                     Token = refreshToken,
-                    ExpiryDate = DateTime.Now.Add(_refreshTokenOptions.RefreshTokenExpiration).ToUniversalTime(),
-                    TokenExpirePeriod = DateTime.Now.Add(_refreshTokenOptions.RefreshTokenExpirationPeriod).ToUniversalTime(),
+                    TokenValidityPeriod = DateTime.Now.Add(_refreshTokenOptions.ValidityPeriod).ToUniversalTime(),
+                    TokenStoragePeriod = DateTime.Now.Add(_refreshTokenOptions.StoragePeriod).ToUniversalTime(),
                     CreatedAt = DateTime.Now.ToUniversalTime(),
                 };
 
@@ -57,7 +57,7 @@ public class TokenGenerateService
                     notRevokeRefreshToken.Revoked = true;
                     notRevokeRefreshToken.ReplacedByNextToken = newRefreshToken.Id;
                 }
-                var overdueTokens = refreshTokens.Where(x => x.TokenExpirePeriod <= DateTime.Now.ToUniversalTime()).ToArray();
+                var overdueTokens = refreshTokens.Where(x => x.TokenStoragePeriod <= DateTime.Now.ToUniversalTime()).ToArray();
 
                 _applicationDbContext.RefreshTokens.RemoveRange(overdueTokens);
                 await _applicationDbContext.SaveChangesAsync(cancellationToken);
