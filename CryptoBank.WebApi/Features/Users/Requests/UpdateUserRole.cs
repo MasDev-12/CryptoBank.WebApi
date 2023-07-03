@@ -4,6 +4,10 @@ using CryptoBank.WebApi.Features.Users.Models;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using CryptoBank.WebApi.Errors.Exceptions;
+
+using static CryptoBank.WebApi.Features.Users.Errors.UserValidationErrors;
+using static CryptoBank.WebApi.Features.Users.Errors.UserLogicConflictErrors;
 
 namespace CryptoBank.WebApi.Features.Users.Requests;
 
@@ -20,9 +24,9 @@ public static class UpdateUserRole
             RuleFor(x => x.Email)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("Email empty")
+                .WithErrorCode(EmailRequired)
                 .EmailAddress()
-                .WithMessage("Email format not correct");
+                .WithErrorCode(EmailInvalidFormat);
 
             RuleFor(x => x.Email)
               .Cascade(CascadeMode.Stop)
@@ -31,12 +35,12 @@ public static class UpdateUserRole
                   var userExists = await applicationDbContext.Users.AnyAsync(user => user.Email == x.ToLower(), token);
 
                   return userExists;
-              }).WithMessage("User not exist");
+              }).WithErrorCode(EmailExistOrInvalid);
 
             RuleFor(x => x.UpdateRole)
              .Cascade(CascadeMode.Stop)
              .IsInEnum()
-             .WithMessage("Invalid role name, role not found");
+             .WithErrorCode(InvalidRole);
         }
     }
 
@@ -59,7 +63,7 @@ public static class UpdateUserRole
 
             if (role != null)
             {
-                throw new Exception();
+                throw new LogicConflictException("Role already use", RoleAlreadyUse);
             }
 
             var newRole = new Role

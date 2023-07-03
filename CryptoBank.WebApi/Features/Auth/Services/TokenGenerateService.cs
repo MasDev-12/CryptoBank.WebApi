@@ -1,5 +1,7 @@
 ﻿using CryptoBank.WebApi.Database;
+using CryptoBank.WebApi.Errors.Exceptions;
 using CryptoBank.WebApi.Features.Auth.Domain;
+using CryptoBank.WebApi.Features.Auth.Errors;
 using CryptoBank.WebApi.Features.Auth.Options;
 using CryptoBank.WebApi.Features.Users.Domain;
 using Microsoft.Extensions.Options;
@@ -67,7 +69,7 @@ public class TokenGenerateService
             catch (Exception)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                throw new Exception();
+                throw new LogicConflictException("Refresh token error", AuthLogicConflictErrors.RefreshTokenError);
             }
             return (accessToken, refreshToken);
         }

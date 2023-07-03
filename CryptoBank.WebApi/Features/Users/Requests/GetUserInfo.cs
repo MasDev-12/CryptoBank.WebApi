@@ -4,6 +4,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+using static CryptoBank.WebApi.Features.Users.Errors.UserValidationErrors;
+
 namespace CryptoBank.WebApi.Features.Users.Requests;
 
 public class GetUserInfo
@@ -23,7 +25,7 @@ public class GetUserInfo
                    var userExists = await applicationDbContext.Users.AnyAsync(user => user.Id == x, token);
 
                    return userExists;
-               }).WithErrorCode("User not exist");
+               }).WithErrorCode(NotExist);
         }
     }
 

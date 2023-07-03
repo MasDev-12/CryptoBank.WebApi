@@ -1,5 +1,6 @@
 using CryptoBank.WebApi.Authorization.Requirements;
 using CryptoBank.WebApi.Database;
+using CryptoBank.WebApi.Errors.Extensions;
 using CryptoBank.WebApi.Features.Accounts.Registration;
 using CryptoBank.WebApi.Features.Auth.Options;
 using CryptoBank.WebApi.Features.Auth.Registration;
@@ -14,6 +15,8 @@ using System.Reflection;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ApplicationDbContext")));
@@ -62,9 +65,9 @@ builder.AddAccounts();
 
 var app = builder.Build();
 
-
-
 app.UseHttpsRedirection();
+
+app.MapPromlebDetails();
 
 app.UseAuthentication();
 app.UseAuthorization();

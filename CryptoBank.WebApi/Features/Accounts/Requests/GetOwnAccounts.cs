@@ -4,6 +4,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+using static CryptoBank.WebApi.Features.Users.Errors.UserValidationErrors;
+
 namespace CryptoBank.WebApi.Features.Accounts.Requests;
 
 public static class GetOwnAccounts
@@ -19,7 +21,7 @@ public static class GetOwnAccounts
             RuleFor(x => x.UserId)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("User id empty");
+                .WithErrorCode(UserIdRequired);
 
             RuleFor(x => x.UserId)
                 .Cascade(CascadeMode.Stop)
@@ -27,7 +29,7 @@ public static class GetOwnAccounts
                 {
                     var ExistUser = await applicationDbContext.Users.AnyAsync(user => user.Id == x);
                     return ExistUser;
-                }).WithMessage("User not exist");
+                }).WithErrorCode(NotExist);
         }
     }
 

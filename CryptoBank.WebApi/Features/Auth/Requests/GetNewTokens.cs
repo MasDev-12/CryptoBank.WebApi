@@ -1,9 +1,12 @@
 ﻿using CryptoBank.WebApi.Database;
+using CryptoBank.WebApi.Errors.Exceptions;
 using CryptoBank.WebApi.Features.Auth.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+
+using static CryptoBank.WebApi.Features.Auth.Errors.AuthValidationErrors;
 
 namespace CryptoBank.WebApi.Features.Auth.Requests;
 
@@ -19,7 +22,7 @@ public static class GetNewTokens
             RuleFor(x => x.RefreshToken)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithErrorCode("Token required");
+                .WithErrorCode(TokenRequired);
 
             RuleFor(x => x.RefreshToken)
                 .Cascade(CascadeMode.Stop)
@@ -28,7 +31,7 @@ public static class GetNewTokens
                     var refreshTokenExist = await applicationDbContext.RefreshTokens.AnyAsync(t => t.Token == x, cancellationToken);
 
                     return refreshTokenExist;
-                }).WithErrorCode("Token not exist");
+                }).WithErrorCode(TokenNotExist);
         }
     }
 
@@ -60,7 +63,7 @@ public static class GetNewTokens
                     actualRefreshToken.Revoked = true;
                     await _applicationDbContext.SaveChangesAsync(cancellationToken);
                 }
-                throw new Exception();
+                throw new LogicConflictException("Invalid token", TokenInvalid);
             }
             var (accessToken, generatedRefreshToken) =  await _tokenGenerateService.GenerateTokens(refreshToken.User, cancellationToken);
             return new Response(accessToken, generatedRefreshToken);

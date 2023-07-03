@@ -6,7 +6,11 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.Threading;
+
+using static CryptoBank.WebApi.Features.Users.Errors.UserValidationErrors;
+using static CryptoBank.WebApi.Features.Accounts.Errors.AccountValidationErrors;
+using static CryptoBank.WebApi.Features.Accounts.Errors.AccountLogicConflictErrors;
+using CryptoBank.WebApi.Errors.Exceptions;
 
 namespace CryptoBank.WebApi.Features.Accounts.Requests;
 
@@ -22,23 +26,23 @@ public static class CreateAccount
         {
             RuleFor(x => x.Currency).Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("Currency required")
+                .WithErrorCode(CurrencyRequired)
                 .Matches("BTC")
-                .WithMessage("Currency not exist");
+                .WithErrorCode(InvalidCurrency);
 
             RuleFor(x => x.UserId).Cascade(CascadeMode.Stop)
                 .MustAsync(async (x, token) =>
                 {
                     var userExists = await applicationDbContext.Users.AnyAsync(user => user.Id == x, token);
                     return userExists;
-                }).WithMessage("User not exist");
+                }).WithErrorCode(NotExist);
 
             RuleFor(x => x.Number).Cascade(CascadeMode.Stop)
                 .MustAsync(async (x, token) =>
                 {
                     var isAccountExist = await applicationDbContext.Accounts.AnyAsync(account => account.Number == x, token);
                     return !isAccountExist;
-                }).WithMessage("Account already exist");
+                }).WithErrorCode(AccountExist);
         }
     }
 
@@ -58,7 +62,7 @@ public static class CreateAccount
             var accountCount = await _applicationDbContext.Accounts.Where(a => a.UserId == request.UserId).CountAsync(cancellationToken);
             if (accountCount == _accountOptions.MaxAccountsPerUser)
             {
-                throw new Exception();
+                throw new LogicConflictException("Accounts limit exceeded", ExceedAccounts);
             }
 
             var account = new Account()

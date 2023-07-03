@@ -8,6 +8,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
+using static CryptoBank.WebApi.Features.Users.Errors.UserValidationErrors;
+
 namespace CryptoBank.WebApi.Features.Users.Requests;
 
 public static class RegisterUser
@@ -22,17 +24,23 @@ public static class RegisterUser
             RuleFor(x => x.Email)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .EmailAddress();
+                .WithErrorCode(EmailRequired)
+                .EmailAddress()
+                .WithErrorCode(EmailInvalidFormat);
 
             RuleFor(x => x.Password)
                  .Cascade(CascadeMode.Stop)
                  .NotEmpty()
-                 .MinimumLength(3);
+                 .WithErrorCode(PasswordRequired)
+                 .MinimumLength(3)
+                 .WithErrorCode(PasswordLenght);
 
             RuleFor(x => x.BirthDate)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .Must(date => IsValidBirthDateMoreThenEightTeen(date));
+                .WithErrorCode(DateBirthRequired)
+                .Must(date => IsValidBirthDateMoreThenEightTeen(date))
+                .WithErrorCode(AgeMoreTheEightTeen);
 
             RuleFor(x => x.Email)
                 .Cascade(CascadeMode.Stop)
@@ -41,7 +49,7 @@ public static class RegisterUser
                     var userExists = await applicationDbContext.Users.AnyAsync(user => user.Email == x, token);
 
                     return !userExists;
-                }).WithMessage("The user is already in the system");
+                }).WithErrorCode(EmailExistOrInvalid);
         }
 
         private bool IsValidBirthDateMoreThenEightTeen(DateTime? birthDate)
