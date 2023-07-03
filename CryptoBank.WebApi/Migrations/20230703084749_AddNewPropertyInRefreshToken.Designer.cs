@@ -3,6 +3,7 @@ using System;
 using CryptoBank.WebApi.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CryptoBank.WebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230703084749_AddNewPropertyInRefreshToken")]
+    partial class AddNewPropertyInRefreshToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,7 +68,10 @@ namespace CryptoBank.WebApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("ReplacedByNextToken")
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("ReplacedByNextToken")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("Revoked")
@@ -76,10 +82,7 @@ namespace CryptoBank.WebApi.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<DateTime>("TokenStoragePeriod")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("TokenValidityPeriod")
+                    b.Property<DateTime>("TokenExpirePeriod")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("UserId")

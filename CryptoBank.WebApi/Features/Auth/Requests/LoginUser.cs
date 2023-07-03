@@ -6,6 +6,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Text.Json.Serialization;
 using static CryptoBank.WebApi.Features.Users.Requests.RegisterUser;
 
 namespace CryptoBank.WebApi.Features.Auth.Requests;
@@ -14,7 +15,7 @@ public class LoginUser
 {
     public record Request(string Email, string Password) : IRequest<Response>;
 
-    public record Response(string AccessToken);
+    public record Response(string AccessToken, [property: JsonIgnore] string RefreshToken);
 
     public class RequestValidator : AbstractValidator<Request>
     {
@@ -23,10 +24,25 @@ public class LoginUser
             RuleFor(x => x.Email)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .EmailAddress();
+                .WithErrorCode("Email required")
+                .EmailAddress()
+                .WithErrorCode("Invalid email format");
+
             RuleFor(x => x.Password)
-                  .Cascade(CascadeMode.Stop)
-                  .MinimumLength(3);
+                 .Cascade(CascadeMode.Stop)
+                 .NotEmpty()
+                 .WithErrorCode("Password required")
+                 .MinimumLength(3)
+                 .WithErrorCode("Invalid password format");
+
+            RuleFor(x => x.Email)
+                 .Cascade(CascadeMode.Stop)
+                 .MustAsync(async (x, CancellationToken) =>
+                 {
+                    var userExist = await applicationDbContext.Users.AnyAsync(user => user.Email == x, CancellationToken);
+
+                    return userExist;
+                 }).WithErrorCode("User not exists");
         }
     }
 
@@ -52,8 +68,10 @@ public class LoginUser
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             var user = await _applicationDbContext.Users
-               .Include(u => u.Roles)
-               .SingleOrDefaultAsync(u => u.Email == request.Email.ToLower(), cancellationToken);
+                .Include(u => u.Roles)
+                .Include(u => u.RefreshTokens)
+                .SingleOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+
             if (user == null)
             {
                 throw new Exception("Invalid credentials");
@@ -61,7 +79,7 @@ public class LoginUser
 
             string[] parts = user.PasswordHashAndSalt.Split(':');
             var passwordHash = _passwordHeshingService.GetPasswordHash(request.Password, Convert.FromBase64String(parts[1]), user);
-            if (passwordHash!=parts[0])
+            if (passwordHash != parts[0])
             {
                 throw new Exception("Invalid credentials");
             }
@@ -80,8 +98,8 @@ public class LoginUser
                 await _applicationDbContext.SaveChangesAsync(cancellationToken); ;
             }
 
-            var accessToken = await _tokenGenerateService.GenerateAccessToken(user, cancellationToken);
-            return new Response(accessToken);
+            var (accessToken, refreshToken) = await _tokenGenerateService.GenerateTokens(user, cancellationToken);
+            return new Response(accessToken, refreshToken);
         }
     }
 }
