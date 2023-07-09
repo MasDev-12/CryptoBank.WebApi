@@ -38,15 +38,6 @@ public class LoginUser
                  .WithErrorCode(PasswordRequired)
                  .MinimumLength(3)
                  .WithErrorCode(PasswordLenght);
-
-            RuleFor(x => x.Email)
-                 .Cascade(CascadeMode.Stop)
-                 .MustAsync(async (x, CancellationToken) =>
-                 {
-                    var userExist = await applicationDbContext.Users.AnyAsync(user => user.Email == x, CancellationToken);
-
-                    return userExist;
-                 }).WithErrorCode(EmailExistOrInvalid);
         }
     }
 

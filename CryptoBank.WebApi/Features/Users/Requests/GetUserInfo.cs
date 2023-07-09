@@ -25,7 +25,7 @@ public class GetUserInfo
                    var userExists = await applicationDbContext.Users.AnyAsync(user => user.Id == x, token);
 
                    return userExists;
-               }).WithErrorCode(NotExist);
+               }).WithErrorCode(NotExists);
         }
     }
 

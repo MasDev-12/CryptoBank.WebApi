@@ -69,7 +69,7 @@ public class TokenGenerateService
             catch (Exception)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                throw new LogicConflictException("Refresh token error", AuthLogicConflictErrors.RefreshTokenError);
+                throw new InternalErrorException("Internal error exception");
             }
             return (accessToken, refreshToken);
         }

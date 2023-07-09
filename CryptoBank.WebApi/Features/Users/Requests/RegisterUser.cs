@@ -49,7 +49,7 @@ public static class RegisterUser
                     var userExists = await applicationDbContext.Users.AnyAsync(user => user.Email == x, token);
 
                     return !userExists;
-                }).WithErrorCode(EmailExistOrInvalid);
+                }).WithErrorCode(NotExists);
         }
 
         private bool IsValidBirthDateMoreThenEightTeen(DateTime? birthDate)

@@ -35,7 +35,7 @@ public static class UpdateUserRole
                   var userExists = await applicationDbContext.Users.AnyAsync(user => user.Email == x.ToLower(), token);
 
                   return userExists;
-              }).WithErrorCode(EmailExistOrInvalid);
+              }).WithErrorCode(NotExists);
 
             RuleFor(x => x.UpdateRole)
              .Cascade(CascadeMode.Stop)

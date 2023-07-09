@@ -9,7 +9,7 @@ namespace CryptoBank.WebApi.Errors.Extensions;
 
 public static class ApplicationBuilderExtensions
 {
-    public static IApplicationBuilder MapPromlebDetails(this IApplicationBuilder app)
+    public static IApplicationBuilder MapProblembDetails(this IApplicationBuilder app)
     {
         app.UseExceptionHandler(builder =>
         {
@@ -22,87 +22,71 @@ public static class ApplicationBuilderExtensions
                 {
                     case ValidationErrorsException validationErrorsException:
                         {
-                            var validationProblemDetails = new ProblemDetails
-                            {
-                                Title = "Validation failed",
-                                Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400",
-                                Detail = validationErrorsException.Message,
-                                Status = StatusCodes.Status400BadRequest,
-                            };
 
-                            validationProblemDetails.Extensions.Add("traceId", Activity.Current?.Id ?? context.TraceIdentifier);
+                            var validationProblemDetails = HandleProblemDetails("Validation failed"
+                                , "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400"
+                                , 400, validationErrorsException.Message, context);
 
                             validationProblemDetails.Extensions["errors"] = validationErrorsException.Errors
-                                .Select(x => new ErrorDataWithCode(x.Field, x.Message, x.Code));
-
-                            context.Response.ContentType = "application/problem+json";
-                            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                                .Select(x => new ErrorData(x.Field, x.Message, x.Code));
 
                             await context.Response.WriteAsync(JsonSerializer.Serialize(validationProblemDetails));
                             break;
                         }
                     case LogicConflictException logicConflictException:
-                        var logicConflictProblemDetails = new ProblemDetails
                         {
-                            Title = "Logic conflict",
-                            Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422",
-                            Detail = logicConflictException.Message,
-                            Status = StatusCodes.Status422UnprocessableEntity,
-                        };
+                            var logicConflictExceptionProblemDetails = HandleProblemDetails("Logic conflict"
+                                , "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422"
+                                , 422, logicConflictException.Message, context);
 
-                        logicConflictProblemDetails.Extensions.Add("traceId", Activity.Current?.Id ?? context.TraceIdentifier);
+                            logicConflictExceptionProblemDetails.Extensions["code"] = logicConflictException.Code;
 
-                        logicConflictProblemDetails.Extensions["code"] = logicConflictException.Code;
-
-                        context.Response.ContentType = "application/problem+json";
-                        context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
-
-                        await context.Response.WriteAsync(JsonSerializer.Serialize(logicConflictProblemDetails));
-                        break;
+                            await context.Response.WriteAsync(JsonSerializer.Serialize(logicConflictExceptionProblemDetails));
+                            break;
+                        }
                     case OperationCanceledException:
-                        var operationCanceledProblemDetails = new ProblemDetails
                         {
-                            Title = "Timeout",
-                            Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/504",
-                            Detail = "Request timed out",
-                            Status = StatusCodes.Status504GatewayTimeout,
-                        };
+                            var operationCanceledProblemDetails = HandleProblemDetails("Timeout"
+                                , "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/504"
+                                , 504, "Request timed out", context);
 
-                        operationCanceledProblemDetails.Extensions.Add("traceId", Activity.Current?.Id ?? context.TraceIdentifier);
-
-                        context.Response.ContentType = "application/problem+json";
-                        context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
-
-                        await context.Response.WriteAsync(JsonSerializer.Serialize(operationCanceledProblemDetails));
-                        break;
+                            await context.Response.WriteAsync(JsonSerializer.Serialize(operationCanceledProblemDetails));
+                            break;
+                        }
                     default:
-                        var internalErrorProblemDetails = new ProblemDetails
                         {
-                            Title = "Internal server error",
-                            Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
-                            Detail = "Interval server error has occured",
-                            Status = StatusCodes.Status500InternalServerError,
-                        };
+                            var internalErrorProblemDetails = HandleProblemDetails("Internal server error"
+                                , "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+                                , 500, "Interval server error has occured", context);
 
-                        internalErrorProblemDetails.Extensions.Add("traceId", Activity.Current?.Id ?? context.TraceIdentifier);
-
-                        context.Response.ContentType = "application/problem+json";
-                        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-                        await context.Response.WriteAsync(JsonSerializer.Serialize(internalErrorProblemDetails));
-                        break;
-                }
+                            await context.Response.WriteAsync(JsonSerializer.Serialize(internalErrorProblemDetails));
+                            break;
+                        }
+                    }
+                });
             });
-        });
         return app;
+    }
+
+    private static ProblemDetails HandleProblemDetails(string title, string type, int status, string message, HttpContext httpContext)
+    {
+        var validatorProblemDetails = new ProblemDetails
+        {
+            Title = title,
+            Type = type,
+            Detail = message,
+            Status = status,
+        };
+        validatorProblemDetails.Extensions.Add("traceId", Activity.Current?.Id ?? httpContext.TraceIdentifier);
+
+        httpContext.Response.ContentType = "application/problem+json";
+        httpContext.Response.StatusCode = status;
+
+        return validatorProblemDetails;
     }
 }
 
 internal record ErrorData(
-    [property: JsonPropertyName("field")] string Field,
-    [property: JsonPropertyName("message")] string Message);
-
-internal record ErrorDataWithCode(
     [property: JsonPropertyName("field")] string Field,
     [property: JsonPropertyName("message")] string Message,
     [property: JsonPropertyName("code")] string Code);

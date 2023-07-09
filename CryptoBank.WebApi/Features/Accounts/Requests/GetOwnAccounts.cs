@@ -27,9 +27,9 @@ public static class GetOwnAccounts
                 .Cascade(CascadeMode.Stop)
                 .MustAsync(async (x, token) =>
                 {
-                    var ExistUser = await applicationDbContext.Users.AnyAsync(user => user.Id == x);
-                    return ExistUser;
-                }).WithErrorCode(NotExist);
+                    var existUser = await applicationDbContext.Users.AnyAsync(user => user.Id == x);
+                    return existUser;
+                }).WithErrorCode(NotExists);
         }
     }
 

@@ -2,11 +2,11 @@
 
 public class AccountValidationErrors
 {
-    private const string Prefix = "Account_validation_";
+    private const string Prefix = "account_validation_";
 
     public const string CurrencyRequired = Prefix + "currency_required";
 
-    public const string AccountExist = Prefix + "account_exist";
+    public const string AccountExist = Prefix + "account_exists";
 
     public const string StartPeriod = Prefix + "start_period_required";
     public const string EndPeriod = Prefix + "end_period_required";

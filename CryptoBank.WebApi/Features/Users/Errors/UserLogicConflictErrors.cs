@@ -2,8 +2,8 @@
 
 public static class UserLogicConflictErrors
 {
-    private const string Prefix = "Users_";
+    private const string Prefix = "users_";
 
-    public static string RoleAlreadyUse = Prefix + "role_already_added_previous";
+    public static string RoleAlreadyUse = Prefix + "role_already_used";
 }
 
