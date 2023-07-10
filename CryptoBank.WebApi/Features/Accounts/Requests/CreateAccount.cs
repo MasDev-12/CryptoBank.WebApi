@@ -42,7 +42,7 @@ public static class CreateAccount
                 {
                     var isAccountExist = await applicationDbContext.Accounts.AnyAsync(account => account.Number == x, token);
                     return !isAccountExist;
-                }).WithErrorCode(AccountExist);
+                }).WithErrorCode(AccountExists);
         }
     }
 

@@ -9,7 +9,7 @@ namespace CryptoBank.WebApi.Errors.Extensions;
 
 public static class ApplicationBuilderExtensions
 {
-    public static IApplicationBuilder MapProblembDetails(this IApplicationBuilder app)
+    public static IApplicationBuilder MapProblemDetails(this IApplicationBuilder app)
     {
         app.UseExceptionHandler(builder =>
         {

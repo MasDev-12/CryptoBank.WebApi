@@ -67,7 +67,7 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-app.MapProblembDetails();
+app.MapProblemDetails();
 
 app.UseAuthentication();
 app.UseAuthorization();

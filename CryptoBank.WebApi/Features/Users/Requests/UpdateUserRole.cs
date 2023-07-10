@@ -63,7 +63,7 @@ public static class UpdateUserRole
 
             if (role != null)
             {
-                throw new LogicConflictException("Role already use", RoleAlreadyUse);
+                throw new LogicConflictException("Role_already_used", RoleAlreadyUse);
             }
 
             var newRole = new Role

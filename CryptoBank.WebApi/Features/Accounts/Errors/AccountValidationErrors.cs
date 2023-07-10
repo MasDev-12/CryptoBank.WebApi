@@ -6,7 +6,7 @@ public class AccountValidationErrors
 
     public const string CurrencyRequired = Prefix + "currency_required";
 
-    public const string AccountExist = Prefix + "account_exists";
+    public const string AccountExists = Prefix + "account_exists";
 
     public const string StartPeriod = Prefix + "start_period_required";
     public const string EndPeriod = Prefix + "end_period_required";
