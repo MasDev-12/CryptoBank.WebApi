@@ -42,8 +42,8 @@ public class UpdateUserRoleTests : IAsyncLifetime
         var userAdmin = CreateUserHelper.CreateUser(_usersOptions.AdministratorEmail.ToLower(), _scope);
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);
 
-        await _applicationDbContext.Users.AddAsync(user);
-        await _applicationDbContext.Users.AddAsync(userAdmin);
+        await _applicationDbContext.Users.AddAsync(user, cancellationToken: _cancellationToken);
+        await _applicationDbContext.Users.AddAsync(userAdmin, cancellationToken: _cancellationToken);
         await _applicationDbContext.SaveChangesAsync();
 
         var updateRole = UserRole.AnalystRole;
@@ -56,7 +56,7 @@ public class UpdateUserRoleTests : IAsyncLifetime
         (await client.PutAsJsonAsync("/users/update-role", request, cancellationToken: _cancellationToken))
             .EnsureSuccessStatusCode();
 
-        var roles = await _applicationDbContext.Roles.Where(u => u.UserId == user.Id).ToArrayAsync();
+        var roles = await _applicationDbContext.Roles.Where(u => u.UserId == user.Id).ToArrayAsync(cancellationToken: _cancellationToken);
 
         //Assert
         roles.Should().NotBeEmpty();
@@ -72,8 +72,8 @@ public class UpdateUserRoleTests : IAsyncLifetime
         var client = _factory.CreateClient();
 
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);
-        await _applicationDbContext.Users.AddAsync(user);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.Users.AddAsync(user, cancellationToken: _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(cancellationToken: _cancellationToken);
         
         var updateRole = UserRole.AnalystRole;
 
@@ -92,7 +92,7 @@ public class UpdateUserRoleTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         FactoryInitHelper.ClearDataAndDisposeAsync(ref _applicationDbContext);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
         await _scope.DisposeAsync();
@@ -136,9 +136,9 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
 
         var updateRole = UserRole.AnalystRole;
 
-        await _applicationDbContext.Users.AddAsync(user);
-        await _applicationDbContext.Users.AddAsync(userAdmin);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.Users.AddAsync(user, cancellationToken: _cancellationToken);
+        await _applicationDbContext.Users.AddAsync(userAdmin, cancellationToken: _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(cancellationToken: _cancellationToken);
 
         await GenerateTokenHelper.GetAccessToken(client, _scope, userAdmin, _cancellationToken);
 
@@ -159,8 +159,8 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
 
         var userAdmin = CreateUserHelper.CreateUser(_usersOptions.AdministratorEmail.ToLower(), _scope);
 
-        await _applicationDbContext.Users.AddAsync(userAdmin);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.Users.AddAsync(userAdmin, cancellationToken: _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(cancellationToken: _cancellationToken);
 
         //Act
         var result = await _validator.TestValidateAsync(new UpdateUserRole.Request(email, updateRole), cancellationToken: _cancellationToken);
@@ -174,7 +174,7 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
     public async Task DisposeAsync()
     {
         FactoryInitHelper.ClearDataAndDisposeAsync(ref _applicationDbContext);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
         await _scope.DisposeAsync();

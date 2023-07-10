@@ -113,11 +113,11 @@ public class GetUserValidationTest : IAsyncLifetime
         //Arrange
         var client = _factory.CreateClient();
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);
-        await _applicationDbContext.Users.AddAsync(user);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.Users.AddAsync(user, cancellationToken: _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(cancellationToken: _cancellationToken);
 
         //Act
-        var result = await _validator.TestValidateAsync(new GetUserInfo.Request(user.Id));
+        var result = await _validator.TestValidateAsync(new GetUserInfo.Request(user.Id), cancellationToken: _cancellationToken);
 
         //Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -145,7 +145,7 @@ public class GetUserValidationTest : IAsyncLifetime
     public async Task DisposeAsync()
     {
         FactoryInitHelper.ClearDataAndDisposeAsync(ref _applicationDbContext);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
         await _scope.DisposeAsync();
