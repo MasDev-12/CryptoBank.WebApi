@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using CryptoBank.WebApi.Errors.Exceptions;
+using System.Security.Claims;
 
 namespace CryptoBank.WebApi.Helpers;
 
@@ -11,6 +12,6 @@ public static class GetUserIdFromClaims
         {
             return userId;
         }
-        throw new Exception();
+        throw new InternalErrorException("Internal error exception");
     }
 }

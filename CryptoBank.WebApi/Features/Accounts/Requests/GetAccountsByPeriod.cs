@@ -3,6 +3,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
+using static CryptoBank.WebApi.Features.Accounts.Errors.AccountValidationErrors;
+
 namespace CryptoBank.WebApi.Features.Accounts.Requests;
 
 public static class GetAccountsByPeriod
@@ -18,17 +20,17 @@ public static class GetAccountsByPeriod
             RuleFor(x => x.Start)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("Start date is empty");
+                .WithErrorCode(StartPeriod);
 
             RuleFor(x => x.End)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("End date is empty");
+                .WithErrorCode(EndPeriod);
 
             RuleFor(x => new { x.Start, x.End })
                 .Cascade(CascadeMode.Stop)
                 .Must((pair, cancellationToken) => IsValidRange(pair.Start, pair.End))
-                .WithMessage("Invalid Range");
+                .WithErrorCode(InvalidRange);
         }
 
         private static bool IsValidRange(DateOnly start, DateOnly end)

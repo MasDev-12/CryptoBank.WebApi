@@ -1,4 +1,5 @@
 ﻿using CryptoBank.WebApi.Database;
+using CryptoBank.WebApi.Errors.Exceptions;
 using CryptoBank.WebApi.Features.Auth.Services;
 using CryptoBank.WebApi.Features.Users.Options;
 using CryptoBank.WebApi.Features.Users.Services;
@@ -7,7 +8,10 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
-using static CryptoBank.WebApi.Features.Users.Requests.RegisterUser;
+using CryptoBank.WebApi.Features.Auth.Errors;
+
+using static CryptoBank.WebApi.Features.Users.Errors.UserValidationErrors;
+using static CryptoBank.WebApi.Features.Auth.Errors.AuthLogicConflictErrors;
 
 namespace CryptoBank.WebApi.Features.Auth.Requests;
 
@@ -24,25 +28,16 @@ public class LoginUser
             RuleFor(x => x.Email)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithErrorCode("Email required")
+                .WithErrorCode(PasswordRequired)
                 .EmailAddress()
-                .WithErrorCode("Invalid email format");
+                .WithErrorCode(EmailInvalidFormat);
 
             RuleFor(x => x.Password)
                  .Cascade(CascadeMode.Stop)
                  .NotEmpty()
-                 .WithErrorCode("Password required")
+                 .WithErrorCode(PasswordRequired)
                  .MinimumLength(3)
-                 .WithErrorCode("Invalid password format");
-
-            RuleFor(x => x.Email)
-                 .Cascade(CascadeMode.Stop)
-                 .MustAsync(async (x, CancellationToken) =>
-                 {
-                    var userExist = await applicationDbContext.Users.AnyAsync(user => user.Email == x, CancellationToken);
-
-                    return userExist;
-                 }).WithErrorCode("User not exists");
+                 .WithErrorCode(PasswordLenght);
         }
     }
 
@@ -74,14 +69,14 @@ public class LoginUser
 
             if (user == null)
             {
-                throw new Exception("Invalid credentials");
+                throw new LogicConflictException("Auth invalid credentials", AuthInvalidCredentials);
             }
 
             string[] parts = user.PasswordHashAndSalt.Split(':');
             var passwordHash = _passwordHeshingService.GetPasswordHash(request.Password, Convert.FromBase64String(parts[1]), user);
             if (passwordHash != parts[0])
             {
-                throw new Exception("Invalid credentials");
+                throw new LogicConflictException("Auth invalid credentials", AuthInvalidCredentials);
             }
 
             if (!(user.MemorySize == _passwordHasherOptions.MemorySize

@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using CryptoBank.WebApi.Errors.Exceptions;
+using FluentValidation;
 using MediatR;
 
 namespace CryptoBank.WebApi.Pipeline;
@@ -16,8 +17,15 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     {
         if (_validator is not null)
         {
+            var result = await _validator.ValidateAsync(request, cancellationToken);
+            if (!result.IsValid)
+            {
+                var errors = result.Errors.Select(x => new RequestValidationError(x.PropertyName, x.ErrorMessage, x.ErrorCode));
+                throw new ValidationErrorsException(errors);
+            }
+
             await _validator.ValidateAndThrowAsync(request, cancellationToken);
-        }
+        }   
         return await next();
     }
 }
