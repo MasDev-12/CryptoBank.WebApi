@@ -8,16 +8,14 @@ public static class FactoryInitHelper
 {
     public static void Init(WebApplicationFactory<Program> factory
         , ref AsyncServiceScope scope
-        , ref ApplicationDbContext applicationDbContext
         , ref CancellationToken cancellationToken)
     {
         var _ = factory.Server;
         scope = factory.Services.CreateAsyncScope();
-        applicationDbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         cancellationToken = CancellationTokenHelper.GetCancellationToken();
     }
 
-    public static void ClearDataAndDisposeAsync(ref ApplicationDbContext applicationDbContext)
+    public static void ClearDataAndDisposeAsync(ApplicationDbContext applicationDbContext)
     {
         applicationDbContext.Accounts.RemoveRange(applicationDbContext.Accounts);
         applicationDbContext.RefreshTokens.RemoveRange(applicationDbContext.RefreshTokens);

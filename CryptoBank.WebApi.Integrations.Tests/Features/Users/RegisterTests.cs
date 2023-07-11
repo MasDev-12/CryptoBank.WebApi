@@ -11,6 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using FluentValidation.TestHelper;
 
 using static CryptoBank.WebApi.Features.Users.Errors.UserValidationErrors;
+using CryptoBank.WebApi.Features.Users.Options;
+using Microsoft.Extensions.Options;
+using CryptoBank.WebApi.Features.Users.Domain;
+using System.Data;
 
 namespace CryptoBank.WebApi.Integrations.Tests.Features.Users;
 
@@ -19,6 +23,7 @@ public class RegisterTests : IAsyncLifetime
     private readonly WebApplicationFactory<Program> _factory;
 
     private ApplicationDbContext _applicationDbContext;
+    private UsersOptions _usersOptions;
     private AsyncServiceScope _scope;
     private CancellationToken _cancellationToken;
 
@@ -59,6 +64,33 @@ public class RegisterTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Should_register_administrator()
+    {
+        //Arrange
+        var client = _factory.CreateClient();
+        var roleExpect = new Role()
+        {
+            Name = UserRole.AdministratorRole
+        };
+        //Act
+        (await client.PostAsJsonAsync("/users/register", new
+        {
+            Email = _usersOptions.AdministratorEmail,
+            Password = "123456",
+            BirthDate = "2000-01-31",
+        }, cancellationToken: _cancellationToken)).EnsureSuccessStatusCode();
+
+        //Assert
+        var user = await _applicationDbContext.Users.SingleOrDefaultAsync(x => x.Email == _usersOptions.AdministratorEmail.ToLower(), cancellationToken: _cancellationToken);
+        user.Should().NotBeNull();
+        user.Email.Should().Be(_usersOptions.AdministratorEmail.ToLower());
+        foreach (var role in user.Roles)
+        {
+            role.Name.Should().Be(roleExpect.Name);
+        }
+    }
+
+    [Fact]
     public async Task Should_validate_same_user()
     {
         //Arrange
@@ -83,7 +115,7 @@ public class RegisterTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(ref _applicationDbContext);
+        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
         await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
@@ -92,7 +124,9 @@ public class RegisterTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _applicationDbContext, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        _usersOptions = _scope.ServiceProvider.GetRequiredService<IOptions<UsersOptions>>().Value;
 
         return Task.CompletedTask;
     }
@@ -126,7 +160,7 @@ public class RegisterTests : IAsyncLifetime
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task Should_required_email(string email)
+        public async Task Should_validate_required_email(string email)
         {
             var result = await _validator.TestValidateAsync(new RegisterUser.Request(email, "password", new DateTime(2000, 01, 31)), cancellationToken: _cancellationToken);
             result.ShouldHaveValidationErrorFor(x => x.Email).WithErrorCode(EmailRequired);
@@ -136,14 +170,14 @@ public class RegisterTests : IAsyncLifetime
         [InlineData("test")]
         [InlineData("@test.com")]
         [InlineData("test@")]
-        public async Task Should_required_email_format(string email)
+        public async Task Should_validate_required_email_format(string email)
         {
             var result = await _validator.TestValidateAsync(new RegisterUser.Request(email, "password", new DateTime(2000, 01, 31)), cancellationToken: _cancellationToken);
             result.ShouldHaveValidationErrorFor(x => x.Email).WithErrorCode(EmailInvalidFormat);
         }
 
         [Fact]
-        public async Task Should_email_exist()
+        public async Task Should_validate_email_exist()
         {
             var user = CreateUserHelper.CreateUser("test@test.com", _scope);
 
@@ -158,7 +192,7 @@ public class RegisterTests : IAsyncLifetime
         [InlineData(null)]
         [InlineData(" ")]
         [InlineData("")]
-        public async Task Should_required_password(string password)
+        public async Task Should_validate_required_password(string password)
         {
             var result = await _validator.TestValidateAsync(new RegisterUser.Request("test@test.com", password, new DateTime(2000, 01, 31)), cancellationToken: _cancellationToken);
             result.ShouldHaveValidationErrorFor(x => x.Password).WithErrorCode(PasswordRequired);
@@ -167,7 +201,7 @@ public class RegisterTests : IAsyncLifetime
         [Theory]
         [InlineData("1")]
         [InlineData("12")]
-        public async Task Should_minimun_password_lengt(string password)
+        public async Task Should_validate_minimun_password_lengt(string password)
         {
             var result = await _validator.TestValidateAsync(new RegisterUser.Request("test@test.com", password, new DateTime(2000, 1, 31)), cancellationToken: _cancellationToken);
             result.ShouldHaveValidationErrorFor(x => x.Password).WithErrorCode(PasswordLenght);
@@ -175,7 +209,7 @@ public class RegisterTests : IAsyncLifetime
 
         [Theory]
         [InlineData(null)]
-        public async Task Should_birthdate_required(DateTime dateTime)
+        public async Task Should_validate_birthdate_required(DateTime dateTime)
         {
             var result = await _validator.TestValidateAsync(new RegisterUser.Request("test@test.com", "123456", dateTime), cancellationToken: _cancellationToken);
             result.ShouldHaveValidationErrorFor(x => x.BirthDate).WithErrorCode(DateBirthRequired);
@@ -190,7 +224,7 @@ public class RegisterTests : IAsyncLifetime
 
         public async Task DisposeAsync()
         {
-            FactoryInitHelper.ClearDataAndDisposeAsync(ref _applicationDbContext);
+            FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
             await _applicationDbContext.SaveChangesAsync(_cancellationToken);
             await _applicationDbContext.DisposeAsync();
 
@@ -199,8 +233,8 @@ public class RegisterTests : IAsyncLifetime
 
         public Task InitializeAsync()
         {
-            FactoryInitHelper.Init(_factory, ref _scope, ref _applicationDbContext, ref _cancellationToken);
-            _validator = new RegisterUser.RequestValidator(_applicationDbContext);
+            FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+            _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             return Task.CompletedTask;
         }

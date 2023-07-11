@@ -66,7 +66,7 @@ public class UpdateUserRoleTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Should_be_unauthorized()
+    public async Task Should_not_authorize_user()
     {
         //Arrange
         var client = _factory.CreateClient();
@@ -91,7 +91,7 @@ public class UpdateUserRoleTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(ref _applicationDbContext);
+        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
         await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
@@ -100,7 +100,8 @@ public class UpdateUserRoleTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _applicationDbContext, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _usersOptions = _scope.ServiceProvider.GetRequiredService<IOptions<UsersOptions>>().Value;
 
         return Task.CompletedTask;
@@ -149,9 +150,8 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
         result.ShouldNotHaveAnyValidationErrors();
     }
 
-    [Theory]
-    [InlineData("test@test.com")]
-    public async Task Should_validate_user_exists(string email)
+    [Fact]
+    public async Task Should_validate_user_exists()
     {
         //Arrange
         var client = _factory.CreateClient();
@@ -163,7 +163,7 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
         await _applicationDbContext.SaveChangesAsync(cancellationToken: _cancellationToken);
 
         //Act
-        var result = await _validator.TestValidateAsync(new UpdateUserRole.Request(email, updateRole), cancellationToken: _cancellationToken);
+        var result = await _validator.TestValidateAsync(new UpdateUserRole.Request("test@test.com", updateRole), cancellationToken: _cancellationToken);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
@@ -173,7 +173,7 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(ref _applicationDbContext);
+        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
         await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
@@ -182,7 +182,8 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _applicationDbContext, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _usersOptions = _scope.ServiceProvider.GetRequiredService<IOptions<UsersOptions>>().Value;
         _validator = new UpdateUserRole.RequestValidator(_applicationDbContext);
 
