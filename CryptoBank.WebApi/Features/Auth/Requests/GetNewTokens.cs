@@ -31,7 +31,7 @@ public static class GetNewTokens
                     var refreshTokenExist = await applicationDbContext.RefreshTokens.AnyAsync(t => t.Token == x, cancellationToken);
 
                     return refreshTokenExist;
-                }).WithErrorCode(TokenNotExist);
+                }).WithErrorCode(TokenNotExists);
         }
     }
 
