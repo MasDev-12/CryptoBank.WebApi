@@ -28,7 +28,7 @@ public class LoginUser
             RuleFor(x => x.Email)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithErrorCode(PasswordRequired)
+                .WithErrorCode(EmailRequired)
                 .EmailAddress()
                 .WithErrorCode(EmailInvalidFormat);
 
