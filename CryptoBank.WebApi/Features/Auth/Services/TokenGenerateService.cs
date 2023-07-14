@@ -4,6 +4,7 @@ using CryptoBank.WebApi.Features.Auth.Domain;
 using CryptoBank.WebApi.Features.Auth.Errors;
 using CryptoBank.WebApi.Features.Auth.Options;
 using CryptoBank.WebApi.Features.Users.Domain;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -30,9 +31,10 @@ public class TokenGenerateService
 
     public async Task<(string accessToken, string refreshToken)> GenerateTokens(User user, CancellationToken cancellationToken)
     {
-        var refreshTokens = user.RefreshTokens
-              .OrderByDescending(x => x.CreatedAt)
-              .ToArray();
+        user.RefreshTokens = await _applicationDbContext.RefreshTokens
+               .Where(x => x.UserId == user.Id)
+               .OrderByDescending(x => x.CreatedAt)
+               .ToListAsync();
 
         var accessToken = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken();
@@ -53,15 +55,19 @@ public class TokenGenerateService
                 _applicationDbContext.Add(newRefreshToken);
                 await _applicationDbContext.SaveChangesAsync(cancellationToken);
 
-                var notRevokeRefreshToken = refreshTokens.FirstOrDefault(t => !t.Revoked);
+                var notRevokeRefreshToken = user.RefreshTokens.FirstOrDefault(t => !t.Revoked);
                 if (notRevokeRefreshToken != null)
                 {
                     notRevokeRefreshToken.Revoked = true;
                     notRevokeRefreshToken.ReplacedByNextToken = newRefreshToken.Id;
                 }
-                var overdueTokens = refreshTokens.Where(x => x.TokenStoragePeriod <= DateTime.Now.ToUniversalTime()).ToArray();
 
-                _applicationDbContext.RefreshTokens.RemoveRange(overdueTokens);
+                var overdueTokens = await _applicationDbContext.RefreshTokens.Where(x => x.TokenStoragePeriod <= DateTime.Now.ToUniversalTime()).ToArrayAsync();
+                foreach (var overdueToken in overdueTokens)
+                {
+                    user.RefreshTokens.Remove(overdueToken);
+                }
+
                 await _applicationDbContext.SaveChangesAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);

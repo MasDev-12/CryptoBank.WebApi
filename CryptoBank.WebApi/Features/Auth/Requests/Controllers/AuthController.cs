@@ -24,7 +24,7 @@ public class AuthController: Controller
     public async Task<LoginUser.Response> LoginUser(LoginUser.Request request, CancellationToken cancellationToken)
     {
         var response = await _mediator.Send(request, cancellationToken);
-        AddToCookieRefreshToken(response.AccessToken);
+        AddToCookieRefreshToken(response.RefreshToken);
         return response;
     }
 

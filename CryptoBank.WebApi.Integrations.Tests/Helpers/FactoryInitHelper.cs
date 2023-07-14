@@ -7,19 +7,22 @@ namespace CryptoBank.WebApi.Integrations.Tests.Helpers;
 public static class FactoryInitHelper
 {
     public static void Init(WebApplicationFactory<Program> factory
-        , ref AsyncServiceScope scope
-        , ref CancellationToken cancellationToken)
+        , out AsyncServiceScope scope
+        , out CancellationToken cancellationToken)
     {
         var _ = factory.Server;
         scope = factory.Services.CreateAsyncScope();
         cancellationToken = CancellationTokenHelper.GetCancellationToken();
     }
 
-    public static void ClearDataAndDisposeAsync(ApplicationDbContext applicationDbContext)
+    public static async Task ClearDataAndDisposeAsync(WebApplicationFactory<Program> factory, CancellationToken cancellationToken)
     {
-        applicationDbContext.Accounts.RemoveRange(applicationDbContext.Accounts);
-        applicationDbContext.RefreshTokens.RemoveRange(applicationDbContext.RefreshTokens);
-        applicationDbContext.Roles.RemoveRange(applicationDbContext.Roles);
-        applicationDbContext.Users.RemoveRange(applicationDbContext.Users);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        dbContext.Accounts.RemoveRange(dbContext.Accounts);
+        dbContext.RefreshTokens.RemoveRange(dbContext.RefreshTokens);
+        dbContext.Roles.RemoveRange(dbContext.Roles);
+        dbContext.Users.RemoveRange(dbContext.Users);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

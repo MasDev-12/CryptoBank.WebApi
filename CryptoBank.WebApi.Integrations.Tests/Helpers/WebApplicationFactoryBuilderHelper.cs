@@ -13,7 +13,7 @@ public static class WebApplicationFactoryBuilderHelper
             {
                 configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    { "ConnectionStrings:TestingApplicationDbContext", databaseConnectionString }
+                    { "ConnectionStrings:ApplicationDbContext", databaseConnectionString }
                 });
             });
         });
