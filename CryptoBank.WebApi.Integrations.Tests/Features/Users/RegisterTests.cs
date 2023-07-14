@@ -28,7 +28,7 @@ public class RegisterTests : IAsyncLifetime
     private CancellationToken _cancellationToken;
 
     private string databaseConnectionString =
-        "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
+        "Host=localhost;Database=CryptoBankDataBaseDraft;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
 
     public RegisterTests()
     {
@@ -141,7 +141,7 @@ public class RegisterTests : IAsyncLifetime
         private CancellationToken _cancellationToken;
 
         private string databaseConnectionString =
-            "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
+            "Host=localhost;Database=CryptoBankDataBaseDraft;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
 
         public RegisterValidatorTests()
         {

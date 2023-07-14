@@ -26,7 +26,7 @@ public class GetNewTokensTests : IAsyncLifetime
     private CookieHelper? _cookieHelper;
 
     private const string DatabaseConnectionString =
-        "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=db_creator;Password=12345678;Maximum Pool Size=10;Connection Idle Lifetime=60;";
+        "Host=localhost;Database=CryptoBankDataBaseDraft;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
 
     public GetNewTokensTests()
     {
@@ -203,7 +203,7 @@ public class GetNewTokensPairValidatorTests : IAsyncLifetime
     private GetNewTokens.RequestValidator? _validator;
 
     private const string DatabaseConnectionString =
-        "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
+        "Host=localhost;Database=CryptoBankDataBaseDraft;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
 
     public GetNewTokensPairValidatorTests()
     {
