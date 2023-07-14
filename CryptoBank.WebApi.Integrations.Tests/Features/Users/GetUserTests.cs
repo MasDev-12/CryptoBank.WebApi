@@ -53,7 +53,7 @@ public class GetUserTests : IAsyncLifetime
 
     [Fact]
     public async Task Should_not_authorize_user()
-    {   
+    {
         //Arrange
         var client = _factory.CreateClient();
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);
@@ -73,7 +73,7 @@ public class GetUserTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
         await _applicationDbContext.SaveChangesAsync();
         await _applicationDbContext.DisposeAsync();
 
@@ -82,7 +82,7 @@ public class GetUserTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         return Task.CompletedTask;
@@ -145,7 +145,7 @@ public class GetUserValidationTest : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
         await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
@@ -154,7 +154,7 @@ public class GetUserValidationTest : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _passwordHashingOptions = _scope.ServiceProvider.GetRequiredService<IOptions<PasswordHashingOptions>>().Value;
         _passwordHashingService = _scope.ServiceProvider.GetRequiredService<PasswordHashingService>();

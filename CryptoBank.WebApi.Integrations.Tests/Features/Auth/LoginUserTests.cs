@@ -107,7 +107,7 @@ public class LoginUserTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
         await _applicationDbContext.SaveChangesAsync();
         await _applicationDbContext.DisposeAsync();
 
@@ -116,7 +116,7 @@ public class LoginUserTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _cookieHelper = new CookieHelper();
 
@@ -220,7 +220,7 @@ public class LoginUserValidatorTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
         await _applicationDbContext.SaveChangesAsync();
         await _applicationDbContext.DisposeAsync();
 
@@ -229,7 +229,7 @@ public class LoginUserValidatorTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _validator = new LoginUser.RequestValidator(_applicationDbContext);
 

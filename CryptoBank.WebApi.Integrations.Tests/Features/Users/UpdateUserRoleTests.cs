@@ -74,7 +74,7 @@ public class UpdateUserRoleTests : IAsyncLifetime
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);
         await _applicationDbContext.Users.AddAsync(user, cancellationToken: _cancellationToken);
         await _applicationDbContext.SaveChangesAsync(cancellationToken: _cancellationToken);
-        
+
         var updateRole = UserRole.AnalystRole;
 
         client.DefaultRequestHeaders.Add("Authorization",
@@ -91,7 +91,7 @@ public class UpdateUserRoleTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
         await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
@@ -100,7 +100,7 @@ public class UpdateUserRoleTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _usersOptions = _scope.ServiceProvider.GetRequiredService<IOptions<UsersOptions>>().Value;
 
@@ -173,7 +173,7 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
         await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
@@ -182,7 +182,7 @@ public class UpdateUserRoleValidatorTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _usersOptions = _scope.ServiceProvider.GetRequiredService<IOptions<UsersOptions>>().Value;
         _validator = new UpdateUserRole.RequestValidator(_applicationDbContext);

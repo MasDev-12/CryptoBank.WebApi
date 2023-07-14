@@ -20,17 +20,17 @@ public class GetNewTokensTests : IAsyncLifetime
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    private ApplicationDbContext _applicationDbContext;
+    private ApplicationDbContext? _applicationDbContext;
     private AsyncServiceScope _scope;
     private CancellationToken _cancellationToken;
-    private CookieHelper _cookieHelper;
+    private CookieHelper? _cookieHelper;
 
-    private string databaseConnectionString =
-        "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
+    private const string DatabaseConnectionString =
+        "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=db_creator;Password=12345678;Maximum Pool Size=10;Connection Idle Lifetime=60;";
 
     public GetNewTokensTests()
     {
-        _factory = WebApplicationFactoryBuilderHelper.ConfigureWebApplicationFactory(databaseConnectionString);
+        _factory = WebApplicationFactoryBuilderHelper.ConfigureWebApplicationFactory(DatabaseConnectionString);
     }
 
     [Fact]
@@ -40,17 +40,17 @@ public class GetNewTokensTests : IAsyncLifetime
         var client = _factory.CreateClient();
         var user = CreateUserHelper.CreateUser("test@test", _scope);
 
-        await _applicationDbContext.Users.AddAsync(user);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext!.Users.AddAsync(user, _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
 
         var response = await client.PostAsJsonAsync("/auth", new
         {
-            Email = user.Email!,
+            Email = user.Email,
             Password = "123456"
         }, cancellationToken: _cancellationToken);
 
         var tokens = await response.Content.ReadFromJsonAsync<LoginUser.Response>(cancellationToken: _cancellationToken);
-        var refreshToken = _cookieHelper.GetCookie(response);
+        var refreshToken = _cookieHelper!.GetCookie(response);
 
         client.DefaultRequestHeaders.Add("Cookie", $"refreshToken={refreshToken}");
 
@@ -59,25 +59,24 @@ public class GetNewTokensTests : IAsyncLifetime
 
         var newTokens = await getNewTokens.Content.ReadFromJsonAsync<GetNewTokens.Response>(cancellationToken: _cancellationToken);
 
-
-        ClaimsPrincipal userIdClaim = GetUserIdFromAccessToken.GetId(tokens.AccessToken, _scope);
+        ClaimsPrincipal userIdClaim = GetUserIdFromAccessToken.GetId(tokens!.AccessToken, _scope);
         var userIdFromClaims = userIdClaim.Claims.SingleOrDefault(i => i.Type == ClaimTypes.NameIdentifier)!.Value;
         var userId = long.Parse(userIdFromClaims);
         var userFromDb = await _applicationDbContext.Users.SingleOrDefaultAsync(x => x.Id == userId);
 
         //Assert
         userFromDb.Should().NotBeNull();
-        userFromDb.Email.Should().Be(user.Email);
+        userFromDb!.Email.Should().Be(user.Email);
 
         tokens.Should().NotBeNull();
         tokens.AccessToken.Should().NotBeEmpty();
         newTokens.Should().NotBeNull();
-        newTokens.AccessToken.Should().NotBeEmpty();
+        newTokens!.AccessToken.Should().NotBeEmpty();
 
         refreshToken.Should().NotBeNull();
         var refreshTokenFromDb = _applicationDbContext.RefreshTokens.SingleOrDefault(x => x.Token == refreshToken);
         refreshTokenFromDb.Should().NotBeNull();
-        refreshTokenFromDb.UserId.Should().Be(user.Id);
+        refreshTokenFromDb!.UserId.Should().Be(user.Id);
     }
 
     [Fact]
@@ -88,12 +87,12 @@ public class GetNewTokensTests : IAsyncLifetime
 
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);
 
-        await _applicationDbContext.Users.AddAsync(user);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext!.Users.AddAsync(user, _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
 
-        var testRefreshTokens = new List<RefreshToken>()
+        var testRefreshTokens = new List<RefreshToken>
         {
-            new RefreshToken()
+            new()
             {
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow,
@@ -101,7 +100,7 @@ public class GetNewTokensTests : IAsyncLifetime
                 TokenValidityPeriod = DateTime.UtcNow.AddDays(2),
                 Token = "revokedToken",
             },
-            new RefreshToken()
+            new()
             {
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow,
@@ -111,8 +110,8 @@ public class GetNewTokensTests : IAsyncLifetime
             }
         };
 
-        await _applicationDbContext.RefreshTokens.AddRangeAsync(testRefreshTokens);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.RefreshTokens.AddRangeAsync(testRefreshTokens, _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
 
         client.DefaultRequestHeaders.Add("Cookie", $"refreshToken={testRefreshTokens[0].Token}");
 
@@ -122,11 +121,10 @@ public class GetNewTokensTests : IAsyncLifetime
         getNewTokens.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
 
         //Assert
-        var response =
-            await getNewTokens.Content.ReadFromJsonAsync<ProblemDetails>(cancellationToken: _cancellationToken);
-        response.Detail.Should().Be("Invalid token");
+        var response = await getNewTokens.Content.ReadFromJsonAsync<ProblemDetails>(cancellationToken: _cancellationToken);
+        response!.Detail.Should().Be("Invalid token");
 
-        var refreshTokens = _applicationDbContext.RefreshTokens
+        _applicationDbContext.RefreshTokens
             .Where(x => x.UserId == user.Id)
             .Select(x => x.Revoked)
             .Should()
@@ -140,12 +138,12 @@ public class GetNewTokensTests : IAsyncLifetime
 
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);
 
-        await _applicationDbContext.Users.AddAsync(user);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext!.Users.AddAsync(user, _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
 
-        var testRefreshTokens = new List<RefreshToken>()
+        var testRefreshTokens = new List<RefreshToken>
         {
-            new RefreshToken()
+            new()
             {
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow.ToUniversalTime(),
@@ -154,7 +152,7 @@ public class GetNewTokensTests : IAsyncLifetime
                 TokenStoragePeriod = DateTime.UtcNow.AddDays(-170),
                 Token = "oldToken",
             },
-            new RefreshToken()
+            new()
             {
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow.ToUniversalTime(),
@@ -165,31 +163,29 @@ public class GetNewTokensTests : IAsyncLifetime
             }
         };
 
-        await _applicationDbContext.RefreshTokens.AddRangeAsync(testRefreshTokens);
-        await _applicationDbContext.SaveChangesAsync();
+        await _applicationDbContext.RefreshTokens.AddRangeAsync(testRefreshTokens, _cancellationToken);
+        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
 
         client.DefaultRequestHeaders.Add("Cookie", $"refreshToken={testRefreshTokens[1].Token}");
 
         //Act
-        var getNewTokens = await client.GetAsync($"/auth/get-new-tokens", cancellationToken: _cancellationToken);
+        await client.GetAsync($"/auth/get-new-tokens", cancellationToken: _cancellationToken);
 
-        var oldRefreshToken = await _applicationDbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == "oldToken");
+        var oldRefreshToken = await _applicationDbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == "oldToken",
+            _cancellationToken);
         oldRefreshToken.Should().BeNull();
     }
 
-
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
-        await _applicationDbContext.SaveChangesAsync();
-        await _applicationDbContext.DisposeAsync();
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
 
         await _scope.DisposeAsync();
     }
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _cookieHelper = new CookieHelper();
 
@@ -201,17 +197,17 @@ public class GetNewTokensPairValidatorTests : IAsyncLifetime
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    private ApplicationDbContext _applicationDbContext;
+    private ApplicationDbContext? _applicationDbContext;
     private AsyncServiceScope _scope;
     private CancellationToken _cancellationToken;
-    private GetNewTokens.RequestValidator _validator;
+    private GetNewTokens.RequestValidator? _validator;
 
-    private string databaseConnectionString =
+    private const string DatabaseConnectionString =
         "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
 
     public GetNewTokensPairValidatorTests()
     {
-        _factory = WebApplicationFactoryBuilderHelper.ConfigureWebApplicationFactory(databaseConnectionString);
+        _factory = WebApplicationFactoryBuilderHelper.ConfigureWebApplicationFactory(DatabaseConnectionString);
     }
 
     [Fact]
@@ -249,8 +245,8 @@ public class GetNewTokensPairValidatorTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
-        await _applicationDbContext.SaveChangesAsync();
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
+        await _applicationDbContext!.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
         await _scope.DisposeAsync();
@@ -258,7 +254,7 @@ public class GetNewTokensPairValidatorTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _validator = new GetNewTokens.RequestValidator(_applicationDbContext);
 

@@ -115,7 +115,7 @@ public class RegisterTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
+        await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
         await _applicationDbContext.SaveChangesAsync(_cancellationToken);
         await _applicationDbContext.DisposeAsync();
 
@@ -124,7 +124,7 @@ public class RegisterTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+        FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _usersOptions = _scope.ServiceProvider.GetRequiredService<IOptions<UsersOptions>>().Value;
 
@@ -224,7 +224,7 @@ public class RegisterTests : IAsyncLifetime
 
         public async Task DisposeAsync()
         {
-            FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);
+            await FactoryInitHelper.ClearDataAndDisposeAsync(_factory, _cancellationToken);
             await _applicationDbContext.SaveChangesAsync(_cancellationToken);
             await _applicationDbContext.DisposeAsync();
 
@@ -233,7 +233,7 @@ public class RegisterTests : IAsyncLifetime
 
         public Task InitializeAsync()
         {
-            FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
+            FactoryInitHelper.Init(_factory, out _scope, out _cancellationToken);
             _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             return Task.CompletedTask;
