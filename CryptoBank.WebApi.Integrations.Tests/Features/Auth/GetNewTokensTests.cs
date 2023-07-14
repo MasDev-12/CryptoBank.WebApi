@@ -133,6 +133,51 @@ public class GetNewTokensTests : IAsyncLifetime
             .AllBeEquivalentTo(true);
     }
 
+    [Fact]
+    public async Task Should_delete_old_token()
+    {
+        var client = _factory.CreateClient();
+
+        var user = CreateUserHelper.CreateUser("test@test.com", _scope);
+
+        await _applicationDbContext.Users.AddAsync(user);
+        await _applicationDbContext.SaveChangesAsync();
+
+        var testRefreshTokens = new List<RefreshToken>()
+        {
+            new RefreshToken()
+            {
+                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow.ToUniversalTime(),
+                Revoked = true,
+                TokenValidityPeriod = DateTime.UtcNow.AddDays(2),
+                TokenStoragePeriod = DateTime.UtcNow.AddDays(-170),
+                Token = "oldToken",
+            },
+            new RefreshToken()
+            {
+                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow.ToUniversalTime(),
+                Revoked = false,
+                TokenValidityPeriod = DateTime.UtcNow.AddDays(2),
+                TokenStoragePeriod = DateTime.UtcNow.AddDays(30),
+                Token = "notRevokedToken",
+            }
+        };
+
+        await _applicationDbContext.RefreshTokens.AddRangeAsync(testRefreshTokens);
+        await _applicationDbContext.SaveChangesAsync();
+
+        client.DefaultRequestHeaders.Add("Cookie", $"refreshToken={testRefreshTokens[1].Token}");
+
+        //Act
+        var getNewTokens = await client.GetAsync($"/auth/get-new-tokens", cancellationToken: _cancellationToken);
+
+        var oldRefreshToken = await _applicationDbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == "oldToken");
+        oldRefreshToken.Should().BeNull();
+    }
+
+
     public async Task DisposeAsync()
     {
         FactoryInitHelper.ClearDataAndDisposeAsync(_applicationDbContext);

@@ -9,21 +9,23 @@ using FluentAssertions;
 using FluentValidation.TestHelper;
 
 using static CryptoBank.WebApi.Features.Users.Errors.UserValidationErrors;
+using Microsoft.EntityFrameworkCore;
 
 namespace CryptoBank.WebApi.Integrations.Tests.Features.Auth;
 
-public class AuthenticationTests : IAsyncLifetime
+public class LoginUserTests : IAsyncLifetime
 {
     private readonly WebApplicationFactory<Program> _factory;
 
     private ApplicationDbContext _applicationDbContext;
+    private CookieHelper _cookieHelper;
     private AsyncServiceScope _scope;
     private CancellationToken _cancellationToken;
 
     private string databaseConnectionString =
         "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
 
-    public AuthenticationTests()
+    public LoginUserTests()
     {
         _factory = WebApplicationFactoryBuilderHelper.ConfigureWebApplicationFactory(databaseConnectionString);
     }
@@ -40,23 +42,27 @@ public class AuthenticationTests : IAsyncLifetime
         await _applicationDbContext.SaveChangesAsync();
 
         //Act
-        var response = (await client.PostAsJsonAsync("/auth", new
+        var response = await client.PostAsJsonAsync("/auth", new
         {
             Email = user.Email!,
             Password = "123456"
-        }));
+        });
 
-        response.EnsureSuccessStatusCode();
-
-        var accessToken = await response.Content.ReadFromJsonAsync<LoginUser.Response>(cancellationToken: _cancellationToken);
+        var tokens = await response.Content.ReadFromJsonAsync<LoginUser.Response>(cancellationToken: _cancellationToken);
+        var accessToken = tokens.AccessToken;
+        var refreshToken = _cookieHelper.GetCookie(response);
 
         //Assert
+        refreshToken.Should().NotBeNull();
+        var refreshTokenFromDb = await _applicationDbContext.RefreshTokens.FirstOrDefaultAsync(x => x.Token == refreshToken);
+        refreshTokenFromDb.Token.Should().Be(refreshToken);
+
         accessToken.Should().NotBeNull();
-        accessToken.AccessToken.Should().NotBeEmpty();
+        accessToken.Should().NotBeEmpty();
     }
 
     [Fact]
-    public async Task Should_required_correct_email()
+    public async Task Should_require_correct_email()
     {
         //Arrange
         var client = _factory.CreateClient();
@@ -78,7 +84,7 @@ public class AuthenticationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Should_required_correct_password()
+    public async Task Should_require_correct_password()
     {
         //Arrange
         var client = _factory.CreateClient();
@@ -112,12 +118,13 @@ public class AuthenticationTests : IAsyncLifetime
     {
         FactoryInitHelper.Init(_factory, ref _scope, ref _cancellationToken);
         _applicationDbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        _cookieHelper = new CookieHelper();
 
         return Task.CompletedTask;
     }
 }
 
-public class AuthenticationValidatorTests : IAsyncLifetime
+public class LoginUserValidatorTests : IAsyncLifetime
 {
     private readonly WebApplicationFactory<Program> _factory;
 
@@ -130,7 +137,7 @@ public class AuthenticationValidatorTests : IAsyncLifetime
     private string databaseConnectionString =
         "Host=localhost;Database=CryptoBankDataBaseDraft.Tests;Username=postgres;Password=Masud1992;Maximum Pool Size=10;Connection Idle Lifetime=60;";
 
-    public AuthenticationValidatorTests()
+    public LoginUserValidatorTests()
     {
         _factory = WebApplicationFactoryBuilderHelper.ConfigureWebApplicationFactory(databaseConnectionString);
     }
