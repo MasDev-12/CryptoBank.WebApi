@@ -83,7 +83,7 @@ public class CreateAccountsTests: IAsyncLifetime
     }
 
     [Fact]
-    public async Task Should_return_LogicConflictException()
+    public async Task Should_return_LogicConflictException_when_accounts_limit_exceeded()
     {
         //Arrange
         var client = _factory.CreateClient();
@@ -173,7 +173,7 @@ public class CreateAccountsValidationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Should_exist_account()
+    public async Task Should_validate_user_exists()
     {
         //Arrange
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);

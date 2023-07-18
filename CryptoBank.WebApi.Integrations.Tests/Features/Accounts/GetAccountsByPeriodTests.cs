@@ -79,7 +79,7 @@ public class GetAccountsByPeriodTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Should_get_response_forbidden()
+    public async Task Should_get_response_forbidden_when_role_wrong()
     {
         var client = _factory.CreateClient();
         var user = CreateUserHelper.CreateUser("test@test.com", _scope);
@@ -126,25 +126,6 @@ public class GetAccountsByPeriodTests : IAsyncLifetime
     {
         //Arrange
         var client = _factory.CreateClient();
-        var user = CreateUserHelper.CreateUser("test@test.com", _scope);
-        await _applicationDbContext!.Users.AddAsync(user, _cancellationToken);
-        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
-
-        var accounts = new List<Account>();
-        for (int i = 0; i < _accountOptions!.MaxAccountsPerUser; i++)
-        {
-            accounts.Add(new Account()
-            {
-                UserId = user.Id,
-                Number = $"1100-1200-1300-140{i}",
-                Amount = 0,
-                Currency = "BTC",
-                CreatedAt = DateTime.UtcNow.AddDays(i),
-            });
-        }
-
-        _applicationDbContext.Accounts.AddRange(accounts);
-        await _applicationDbContext.SaveChangesAsync(_cancellationToken);
 
         client.DefaultRequestHeaders.Add("Authorization",
           "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
