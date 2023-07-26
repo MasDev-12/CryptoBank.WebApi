@@ -4,6 +4,7 @@ using CryptoBank.WebApi.Errors.Extensions;
 using CryptoBank.WebApi.Features.Accounts.Registration;
 using CryptoBank.WebApi.Features.Auth.Options;
 using CryptoBank.WebApi.Features.Auth.Registration;
+using CryptoBank.WebApi.Features.Deposits.Registration;
 using CryptoBank.WebApi.Features.Users.Domain;
 using CryptoBank.WebApi.Features.Users.Registration;
 using CryptoBank.WebApi.Pipeline;
@@ -11,6 +12,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Reflection;
 using System.Security.Claims;
 
@@ -19,7 +21,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("ApplicationDbContext")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("ApplicationDbContext"))
+    , contextLifetime: ServiceLifetime.Scoped
+    , optionsLifetime: ServiceLifetime.Singleton);
+
+builder.Services.AddDbContextFactory<ApplicationDbContext>(
+    (provider, options) =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("ApplicationDbContext")));
 
 builder.Services.AddMediatR(cfg => cfg
     .RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
@@ -62,6 +70,7 @@ builder.Services.AddControllers()
 builder.AddUsers();
 builder.AddAuth();
 builder.AddAccounts();
+builder.AddDeposits();
 
 var app = builder.Build();
 
