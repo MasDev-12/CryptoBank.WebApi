@@ -65,7 +65,7 @@ public class LoginUser
             var user = await _applicationDbContext.Users
                 .Include(u => u.Roles)
                 .Include(u => u.RefreshTokens)
-                .SingleOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+                .SingleOrDefaultAsync(u => u.Email == request.Email.ToLower(), cancellationToken);
 
             if (user == null)
             {

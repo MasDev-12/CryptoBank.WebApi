@@ -1,5 +1,6 @@
 ﻿using CryptoBank.WebApi.Features.Accounts.Domain;
 using CryptoBank.WebApi.Features.Auth.Domain;
+using CryptoBank.WebApi.Features.Deposits.Domain;
 using CryptoBank.WebApi.Features.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,12 +17,15 @@ public class ApplicationDbContext:DbContext
         MapRoles(modelBuilder);
         MapAccounts(modelBuilder);
         MapRefreshTokens(modelBuilder);
+        MapTpubs(modelBuilder);
     }
 
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Account> Accounts { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Tpub> Tpubs { get; set; }
+    public DbSet<DepositAddress> DepositAddresses { get; set; }
 
     private void MapUsers(ModelBuilder modelBuilder)
     {
@@ -139,6 +143,51 @@ public class ApplicationDbContext:DbContext
                  .WithMany(p => p.RefreshTokens)
                  .HasForeignKey(d => d.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+    public void MapTpubs(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Tpub>(tbup =>
+        {
+            tbup.HasKey(t => t.Id);
+
+            tbup.Property(t => t.CurrencyCode)
+                .IsRequired();
+
+            tbup.Property(t => t.Value)
+                .IsRequired();
+        });
+    }
+
+    public void MapDepositAddresses(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<DepositAddress>(depositAddress =>
+        {
+            depositAddress.HasKey(d => d.Id);
+
+            depositAddress.Property(d => d.CurrencyCode)
+               .IsRequired();
+
+            depositAddress.Property(d => d.UserId)
+               .IsRequired();
+
+            depositAddress.Property(d => d.TpubId)
+               .IsRequired();
+
+            depositAddress.HasOne(u => u.User)
+               .WithMany(p => p.DepositAddresses)
+               .HasForeignKey(d => d.UserId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            depositAddress.HasOne(d => d.Tpub)
+               .WithMany()
+               .HasForeignKey(d => d.TpubId);
+
+            depositAddress.Property(d => d.CryptoAddress)
+               .IsRequired();
+
+            depositAddress.Property(d => d.DerivationIndex)
+               .IsRequired();
         });
     }
 }
