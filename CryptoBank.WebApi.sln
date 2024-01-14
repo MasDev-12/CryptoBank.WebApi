@@ -9,7 +9,34 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CryptoBank.WebApi.Integrati
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CryptoBank.WebApi.Unit.Tests", "CryptoBank.WebApi.Unit.Tests", "{911F84D4-1C63-4756-B904-F4351AA8BABF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoBank.WebApi.Integrations.Tests", "CryptoBank.WebApi.Integrations.Tests\CryptoBank.WebApi.Integrations.Tests.csproj", "{6C6B3729-6AAD-45AE-9FBC-96118CD9FB94}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoBank.WebApi.Integrations.Tests", "CryptoBank.WebApi.Integrations.Tests\CryptoBank.WebApi.Integrations.Tests.csproj", "{6C6B3729-6AAD-45AE-9FBC-96118CD9FB94}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infra", "Infra", "{0C15944B-F468-4E07-9262-4F854C4580B4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "terraform", "terraform", "{A29E973D-EC6E-43AC-A0A5-F2E1DF7DC506}"
+	ProjectSection(SolutionItems) = preProject
+		Infra\terraform\main.tf = Infra\terraform\main.tf
+		Infra\terraform\terraform.tf = Infra\terraform\terraform.tf
+		Infra\terraform\variables.tf = Infra\terraform\variables.tf
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{7A5C095A-0748-423A-B53F-2C8A71F0D783}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend_server", "backend_server", "{BACDC2CD-BCF2-44B9-9804-4F9D2E1D0CDD}"
+	ProjectSection(SolutionItems) = preProject
+		Infra\terraform\modules\backend_server\main.tf = Infra\terraform\modules\backend_server\main.tf
+		Infra\terraform\modules\backend_server\outputs.tf = Infra\terraform\modules\backend_server\outputs.tf
+		Infra\terraform\modules\backend_server\terraform.tf = Infra\terraform\modules\backend_server\terraform.tf
+		Infra\terraform\modules\backend_server\variables.tf = Infra\terraform\modules\backend_server\variables.tf
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "database_server", "database_server", "{97111958-FC31-47FE-8411-6FFCCCB8EC46}"
+	ProjectSection(SolutionItems) = preProject
+		Infra\terraform\modules\database_server\main.tf = Infra\terraform\modules\database_server\main.tf
+		Infra\terraform\modules\database_server\outputs.tf = Infra\terraform\modules\database_server\outputs.tf
+		Infra\terraform\modules\database_server\terraform.tf = Infra\terraform\modules\database_server\terraform.tf
+		Infra\terraform\modules\database_server\variables.tf = Infra\terraform\modules\database_server\variables.tf
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +58,10 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6C6B3729-6AAD-45AE-9FBC-96118CD9FB94} = {F52BC79E-01E9-4FDF-A267-721CBC454C50}
+		{A29E973D-EC6E-43AC-A0A5-F2E1DF7DC506} = {0C15944B-F468-4E07-9262-4F854C4580B4}
+		{7A5C095A-0748-423A-B53F-2C8A71F0D783} = {A29E973D-EC6E-43AC-A0A5-F2E1DF7DC506}
+		{BACDC2CD-BCF2-44B9-9804-4F9D2E1D0CDD} = {7A5C095A-0748-423A-B53F-2C8A71F0D783}
+		{97111958-FC31-47FE-8411-6FFCCCB8EC46} = {7A5C095A-0748-423A-B53F-2C8A71F0D783}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {44ABB6AA-462F-4CFB-9FC1-91988834A0F6}
