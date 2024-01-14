@@ -15,7 +15,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infra", "Infra", "{0C15944B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "terraform", "terraform", "{A29E973D-EC6E-43AC-A0A5-F2E1DF7DC506}"
 	ProjectSection(SolutionItems) = preProject
+		Infra\terraform\docker-compose.yml = Infra\terraform\docker-compose.yml
+		Infra\terraform\Dockerfile = Infra\terraform\Dockerfile
 		Infra\terraform\main.tf = Infra\terraform\main.tf
+		Infra\terraform\start.sh = Infra\terraform\start.sh
+		Infra\terraform\stop.sh = Infra\terraform\stop.sh
 		Infra\terraform\terraform.tf = Infra\terraform\terraform.tf
 		Infra\terraform\variables.tf = Infra\terraform\variables.tf
 	EndProjectSection
